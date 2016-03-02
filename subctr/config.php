@@ -6,35 +6,43 @@ while (list($key,$val) = each($_GET)) { $$key = $val; }
 */
 
 
-if (trim($_SERVER['HTTP_HOST']) == 'sf.popularliving.com') {
+$http_host = trim( $_SERVER['HTTP_HOST'] );
+
+//if (trim($_SERVER['HTTP_HOST']) == 'sf.popularliving.com') {
+if ( strpos( trim( $http_host ), 'sf.popularliving.com' ) !== false ) {
 	$host = 'sf';
 	$_SESSION['subcampid'] = '3507';
 	$subcampid = '3507';	// keep this as quick fix
 	$other_host = 'r4l';
 	$google_analytics = "UA-44287917-1";
 }
-if (trim($_SERVER['HTTP_HOST']) == 'r4l.popularliving.com') {
+//if (trim($_SERVER['HTTP_HOST']) == 'r4l.popularliving.com') {
+if ( strpos( trim( $http_host ), 'r4l.popularliving.com' ) !== false ) {
 	$host = 'r4l';
 	$_SESSION['subcampid'] = '2767';
 	$subcampid = '2767';	// keep this as quick fix
 	$other_host = 'fitfab';
 	$google_analytics = "UA-1200417-21";
 }
-if (trim($_SERVER['HTTP_HOST']) == 'fitfab.popularliving.com') {
+//if (trim($_SERVER['HTTP_HOST']) == 'fitfab.popularliving.com') {
+if ( strpos( trim( $http_host ), 'fitfab.popularliving.com' ) !== false ) {
 	$host = 'fitfab';
 	$_SESSION['subcampid'] = '2752';
 	$subcampid = '2752';	// keep this as quick fix
 	$other_host = 'r4l';
 	$google_analytics = "UA-10900002-7";
 }
-if (trim($_SERVER['HTTP_HOST']) == 'wim.popularliving.com') {
+//if (trim($_SERVER['HTTP_HOST']) == 'wim.popularliving.com') {
+if ( strpos( trim( $http_host ), 'wim.popularliving.com' ) !== false ) {
 	$host = 'wim';
 	$_SESSION['subcampid'] = '3078';
 	$subcampid = '3078';	// keep this as quick fix
 	$other_host = 'r4l';
 	$google_analytics = "UA-33504465-1";
 }
-if (trim($_SERVER['HTTP_HOST']) == 'br.popularliving.com') {
+//if (trim($_SERVER['HTTP_HOST']) == 'br.popularliving.com') {
+if ( strpos( trim( $http_host ), 'br.popularliving.com' ) !== false ) {
+	$host = 'wim';
 	$host = 'br';
 	$_SESSION['subcampid'] = '4223';
 	$subcampid = '4223';	// keep this as quick fix
