@@ -9,10 +9,15 @@ function getMicroTime() {
 }
 
 //the database connection
-$hostName = "8ec3cdb8845732ea5bbc2a32fa2a87d52453102e.rackspaceclouddb.com";
-$username = 'jingshi';
-$password = 'kendeji12306!';
-$dbname = 'arcamax';
+//$hostName = "8ec3cdb8845732ea5bbc2a32fa2a87d52453102e.rackspaceclouddb.com";
+$hostName = "a525a02442eb32ce6698509dc480168c11ae2a4f.rackspaceclouddb.com";
+//$username = 'jingshi';
+$username = 'nibbles_stage';
+//$password = 'kendeji12306!';
+$password = 'gSMrxr94NY6Kox}';
+//$dbname = 'arcamax';
+$dbname = 'arcamax_stage';
+
 
 $connection = NULL;
 $session_table = NULL;
