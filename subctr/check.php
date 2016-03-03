@@ -28,14 +28,18 @@ if ($_SESSION['passed_captcha'] == 'no') {
 	exit;
 }
 
-//    if($_SESSION['email'] =="leonz@junemedia.com"){
-//        echo "<pre>";
-//        print_r($_SESSION);
-//        echo "</pre>";
-//    }
+/***************************** debugging ***************************/
+if ($_SESSION['email'] == "johns@junemedia.com") {
+  echo '<pre style="font-size: 80%;">';
+  print_r($_SESSION);
+  echo '</pre>';
+}
+/**************************** /debugging ***************************/
 
 $confirmation = "";
 $show_conf_message = false;
+
+// handle form submission
 if ($_POST['submit'] == 'Update Information') { 
 	$aJoinListId = $_POST['aJoinListId'];
 	if (count($_POST['aJoinListId']) == 0) {
@@ -347,7 +351,8 @@ if (trim($_SESSION['email']) == '') {
 			<a href='"."http://".trim($_SERVER['HTTP_HOST'])."/subctr/index.php?PHPSESSID=".session_id()."'>Click here and try again</a>.
 				</div>";
 	exit;
-} else {
+}
+else {
 	/* START = Get User Data */
 	$get_user_data = "SELECT * FROM userData WHERE email=\"".trim($_SESSION['email'])."\" LIMIT 1";
 	$get_user_data_result = mysql_query($get_user_data);
@@ -374,6 +379,8 @@ $temp_email = trim($_SESSION['email']);
 $get_past_data = "SELECT dateTime,ipaddr FROM joinEmailSub WHERE email='$temp_email' ORDER BY dateTime ASC LIMIT 1";
 $get_past_data_result = mysql_query($get_past_data);
 echo mysql_error();
+
+// $first_time == new subscriber
 $first_time = true;
 while ($get_past_data_row = mysql_fetch_object($get_past_data_result)) {
 	$first_signup_ipaddr = $get_past_data_row->ipaddr;
@@ -413,6 +420,7 @@ $active_count_result = mysql_query($active_count);
 echo mysql_error();
 
 // get contents of a file into a string
+// this is so dumb, there has to be a good reason for it...
 $filename = getcwd()."/templates/".mysql_num_rows($active_count_result)."_slots.html";
 $handle = fopen($filename, "r");
 $main_newsletter_listing = fread($handle, filesize($filename));
@@ -421,11 +429,13 @@ fclose($handle);
 
 
 // get template for more newsletter listing
+// get lists of sister sites
 $active_count = "SELECT * FROM joinLists WHERE isActive = 'Y' AND site NOT LIKE '%$host%'";
 $active_count_result = mysql_query($active_count);
 echo mysql_error();
 
 // get contents of a file into a string
+// this is so dumb, there has to be a good reason for it...
 $filename = getcwd()."/templates/".mysql_num_rows($active_count_result)."_slots.html";
 $handle = fopen($filename, "r");
 $more_newsletter_listing = fread($handle, filesize($filename));
@@ -441,6 +451,7 @@ $_SESSION['all_listing_array'] = array();
 
 
 /* START = Get Listing of NL/SOLO */
+// get lists for current site
 $active_nl_query = "SELECT * FROM joinLists 
 					WHERE isActive = 'Y' AND site LIKE '%$host%'
 					ORDER BY sortOrder ASC";
@@ -456,6 +467,7 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
 		$checked = 'checked';
 	}
 	
+  // this is insane...
 	$main_newsletter_listing = str_replace("[CHECKBOX_$xx]","<input type='checkbox' value='$active_nl_row->listid' name='aJoinListId[]' $checked>",$main_newsletter_listing);
 	$main_newsletter_listing = str_replace("[MESSAGE_$xx]","<div id='$active_nl_row->listid'></div>",$main_newsletter_listing);
 	$main_newsletter_listing = str_replace("[IMAGE_URL_$xx]",$active_nl_row->logo,$main_newsletter_listing);
@@ -480,6 +492,7 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
 		$checked = 'checked';
 	}
 	
+  // this is insane...
 	$more_newsletter_listing = str_replace("[CHECKBOX_$xx]","<input type='checkbox' value='$active_nl_row->listid' name='aJoinListId[]' $checked>",$more_newsletter_listing);
 	$more_newsletter_listing = str_replace("[MESSAGE_$xx]","<div id='$active_nl_row->listid'></div>",$more_newsletter_listing);
 	$more_newsletter_listing = str_replace("[IMAGE_URL_$xx]",$active_nl_row->logo,$more_newsletter_listing);
@@ -514,7 +527,7 @@ body {
 			</td>
 		</tr>
 		<tr><td colspan="2" style='line-height:30%'>&nbsp;</td></tr>
-		<!---  START OF MANAGE MY NEWSLETTER SECTION ----->
+		<!---  START OF MANAGE MY NEWSLETTER SECTION -->
 		<tr>
 			<td colspan="2">
 				<?php
@@ -560,6 +573,7 @@ body {
 					
 					<?php
 					
+          // this will never be true anymore...see getBounceCountFromArcamax()
 					if (ctype_digit($_SESSION['bouncecount']) && $_SESSION['bouncecount'] >= 20) {
 						echo "<font color='red'>Note: You may not be receiving your newsletters because we currently show that your e-mail address has bounced out due to delivery problems with your domain. <b>If you would like to restore your subscription, <a href='reset.php'>click here</a></b>.</font><br><br>";
 					}
@@ -667,7 +681,7 @@ body {
 				<?php echo $more_newsletter_listing; ?>
 			</td>
 		</tr>
-		<!---  END OF MORE Newsletters/Offers ----->
+		<!---  END OF MORE Newsletters/Offers -->
 		
 		<tr><td colspan="2" style='line-height:30%'>&nbsp;</td></tr>
 		
@@ -681,7 +695,7 @@ body {
 		
 		
 		
-		<!---  START OF UPDATE INFORMATION ----->
+		<!---  START OF UPDATE INFORMATION -->
 		<tr><td colspan="2" style='line-height:30%'>&nbsp;</td></tr>
 		<tr>
 			<td colspan="2">
@@ -785,7 +799,7 @@ body {
 				?>
 			</td>
 		</tr>
-		<!---  END OF Subscription History ----->
+		<!---  END OF Subscription History -->
 		
 		
 		

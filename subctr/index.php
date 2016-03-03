@@ -19,9 +19,11 @@ include_once("config.php");
 
 $_SESSION['passed_captcha'] = 'no';
 
+// Result of entering email and captcha code and hitting submit
 if ($_POST['submit'] == 'Sign In' && $_POST['email'] != '' && strlen($_POST['security_code']) == 3) {
 	$email = addslashes($_POST['email']);
 	
+  // correct security code entered
 	if( $_SESSION['security_code'] == $_POST['security_code'] && !empty($_SESSION['security_code'] ) ) {
 		// Insert you code for processing the form here, e.g emailing the submission, entering it into a database.
 		unset($_SESSION['security_code']);
@@ -30,10 +32,13 @@ if ($_POST['submit'] == 'Sign In' && $_POST['email'] != '' && strlen($_POST['sec
 		
 		$email_check_passed = false;
 		
+    // check for email format...
 		if (!eregi("^[A-Za-z0-9\._-]+[@]{1,1}[A-Za-z0-9-]+[\.]{1}[A-Za-z0-9\.-]+[A-Za-z]$", $email)) {
 			$error = "The email address you provided is not valid. Please try again.";
 			$email_check_passed = false;
-		} else {
+    }
+    // ...else do some other rigamarole
+    else {
 			// Check DNS records corresponding to a given domain
 			// Get MX records corresponding to a given domain.
 			list($prefix, $domain) = split("@",$email);
@@ -94,7 +99,7 @@ if ($_POST['submit'] == 'Sign In' && $_POST['email'] != '' && strlen($_POST['sec
 				}
 			}
 		}
-		
+		// if all is good, load check.php
 		if ($email_check_passed == true) {
 			$_SESSION['passed_captcha'] = 'yes';
 			$bounce_count = getBounceCountFromArcamax($email);
