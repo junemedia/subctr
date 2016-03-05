@@ -41,13 +41,23 @@ if ($_SESSION['passed_captcha'] == 'no') {
 $confirmation = "";
 $show_conf_message = false;
 
-// handle form submission
+/* ***************************************************************** */
+/*  handle form submission                                           */
+/* ***************************************************************** */
 if ($_POST['submit'] == 'Update Information') {
+  // getting an array of `joinLists`.`listid` (395, 394, etc...)
+  // in other words a list of all the newsletters the user would like
+  // to start/continue to receive
   $aJoinListId = $_POST['aJoinListId'];
+
+  // create empty array if necessary
   if (count($_POST['aJoinListId']) == 0) {
     $aJoinListId = array();
   }
 
+  // no idea at this point where the source and subsource session
+  // vars would be getting set, but it apparently happens somewhere
+  // sometimes
   $email = $_SESSION['email'];
   $user_ip = $_SESSION['user_ip'];
   $source = $_SESSION['source'];
@@ -55,30 +65,44 @@ if ($_POST['submit'] == 'Update Information') {
   if ($subsource == '') { $subsource = $host; }
   //if($source == ''){$source = "$host Sub Center";}
 
-  //if($email =="leonz@junemedia.com"){
-  //    echo "<pre>";
-  //    print_r($_POST);
-  //    echo "</pre>";
-  //    exit;
-  //}
+  /***************************** debugging ***************************/
+  /* if ($_SESSION['email'] == "johns@junemedia.com") { */
+  /*     echo '<pre style="font-size: 80%">'; */
+  /*     print_r($_POST); */
+  /*     echo '</pre>'; */
+  /* } */
+  /**************************** /debugging ***************************/
 
+  // array of unselected ids
+  // diff the array of all lists with the array we received, in other
+  // words the list of all newsletters the user should not receive
   $not_checked_array = array_diff($_SESSION['all_listing_array'], $aJoinListId);
 
+  // string of comma-separated ids of newly un/subscribed lists,
+  // i.e., form items that have changed
   $new_sub = '';
   $new_unsub = '';
+
   $build_list_id_for_r4l = '';
   $build_list_id_for_ff = '';
   $build_list_id_for_wim = '';
   $build_list_id_for_sf = '';
   $build_list_id_for_br = '';
+
+  /* *************************************************************** */
+  /*  Do subscribes:
+  /*  check if this is already in our system. if so, do nothing.
+  /*  if not, then add as new signup
+  /* *************************************************************** */
   foreach ($aJoinListId as $checked) {
-    // check if this is already in our system.  if so, do nothing.
-    // if not, then add as new signup and send to arcamax.
     $check_query = "SELECT * FROM joinEmailActive WHERE email =\"$email\" AND listid=\"$checked\"";
     $check_query_result = mysql_query($check_query);
     echo mysql_error();
+
+    // this is a new subscription
     if (mysql_num_rows($check_query_result) == 0) {
-      // add as new signup and send to arcamax
+
+      // get the subcampid and add to appropriate $build_list
       $subcampid = '';
       if (in_array($checked, $_SESSION['r4l_all_listid'])) {
         $subcampid = $_SESSION['r4l_subcampid'];
@@ -101,26 +125,17 @@ if ($_POST['submit'] == 'Update Information') {
         $build_list_id_for_br .= $checked.',';
       }
 
-      // Fill in the subsource and source field
-
-
+      // add id to new subs string
       $new_sub .= "'$checked',";
 
-//                if($email =="leonz@junemedia.com"){
-//                    echo "<pre>";
-//                    var_dump($source);
-//                    echo "</pre>";
-                    //exit;
-//                }
-
-
-      // insert into joinEmailSub
+      // insert into `joinEmailSub`
+      // `joinEmailSub` logs subscribe activity
       $insert_query = "INSERT INTO joinEmailSub (dateTime,email,ipaddr,listid,subcampid,source,subsource)
               VALUES (NOW(),\"$email\",\"$user_ip\",\"$checked\",\"$subcampid\",\"$source\",\"$subsource\")";
       $insert_query_result = mysql_query($insert_query);
       echo mysql_error();
 
-      // insert into joinEmailActive
+      // insert into `joinEmailActive`
       $insert_query = "INSERT INTO joinEmailActive (dateTime,email,ipaddr,listid,subcampid,source,subsource)
               VALUES (NOW(),\"$email\",\"$user_ip\",\"$checked\",\"$subcampid\",\"$source\",\"$subsource\")";
       $insert_query_result = mysql_query($insert_query);
@@ -129,7 +144,7 @@ if ($_POST['submit'] == 'Update Information') {
       // get new listid from old listid
       $new_listid = LookupNewListIdByOldListId($checked);
 
-      // insert into campaigner
+      // insert into `campaigner`
       $campaigner = "INSERT IGNORE INTO campaigner (dateTime,email,ipaddr,oldListId,newListId,subcampid,source,subsource,type,isProcessed)
               VALUES (NOW(),\"$email\",\"$user_ip\",\"$checked\",\"$new_listid\",\"$subcampid\",\"$source\",\"$subsource\",'sub','N')";
       $campaigner_result = mysql_query($campaigner);
@@ -142,15 +157,14 @@ if ($_POST['submit'] == 'Update Information') {
     }
   }
 
+  /* *************************************************************** */
+  /*  Do not sure what
+  /* *************************************************************** */
   if ($build_list_id_for_r4l != '') {
     $temp_subcampid = $_SESSION['r4l_subcampid'];
     $build_list_id_for_r4l = substr($build_list_id_for_r4l,0,strlen($build_list_id_for_r4l)-1);
-    //echo "<!--r4l: $build_list_id_for_r4l -->\n\n\n";
-    // call to function to send new subscriber to Arcamax.
     $send_to_arcamax = Arcamax($email,$build_list_id_for_r4l,$temp_subcampid,$user_ip,'sub'); // sub or unsub
-    //echo "<!--r4l: $send_to_arcamax -->\n\n\n";
 
-    // record arcamax server response log
     $insert_log = "INSERT IGNORE INTO arcamaxNewLog (dateTime,email,listid,subcampid,ipaddr,type,response)
           VALUES (NOW(),\"$email\",\"$build_list_id_for_r4l\",\"$temp_subcampid\",\"$user_ip\",\"sub\",\"$send_to_arcamax\")";
     $insert_log_result = mysql_query($insert_log);
@@ -161,12 +175,8 @@ if ($_POST['submit'] == 'Update Information') {
   if ($build_list_id_for_ff != '') {
     $temp_subcampid = $_SESSION['fitfab_subcampid'];
     $build_list_id_for_ff = substr($build_list_id_for_ff,0,strlen($build_list_id_for_ff)-1);
-    //echo "<!--ff: $build_list_id_for_ff -->\n\n\n";
-    // call to function to send new subscriber to Arcamax.
     $send_to_arcamax = Arcamax($email,$build_list_id_for_ff,$temp_subcampid,$user_ip,'sub'); // sub or unsub
-    //echo "<!--ff: $send_to_arcamax -->\n\n\n";
 
-    // record arcamax server response log
     $insert_log = "INSERT IGNORE INTO arcamaxNewLog (dateTime,email,listid,subcampid,ipaddr,type,response)
           VALUES (NOW(),\"$email\",\"$build_list_id_for_ff\",\"$temp_subcampid\",\"$user_ip\",\"sub\",\"$send_to_arcamax\")";
     $insert_log_result = mysql_query($insert_log);
@@ -177,12 +187,8 @@ if ($_POST['submit'] == 'Update Information') {
   if ($build_list_id_for_wim != '') {
     $temp_subcampid = $_SESSION['wim_subcampid'];
     $build_list_id_for_wim = substr($build_list_id_for_wim,0,strlen($build_list_id_for_wim)-1);
-    //echo "<!--wim: $build_list_id_for_wim -->\n\n\n";
-    // call to function to send new subscriber to Arcamax.
     $send_to_arcamax = Arcamax($email,$build_list_id_for_wim,$temp_subcampid,$user_ip,'sub'); // sub or unsub
-    //echo "<!--wim: $send_to_arcamax -->\n\n\n";
 
-    // record arcamax server response log
     $insert_log = "INSERT IGNORE INTO arcamaxNewLog (dateTime,email,listid,subcampid,ipaddr,type,response)
           VALUES (NOW(),\"$email\",\"$build_list_id_for_wim\",\"$temp_subcampid\",\"$user_ip\",\"sub\",\"$send_to_arcamax\")";
     $insert_log_result = mysql_query($insert_log);
@@ -193,12 +199,8 @@ if ($_POST['submit'] == 'Update Information') {
   if ($build_list_id_for_sf != '') {
     $temp_subcampid = $_SESSION['sf_subcampid'];
     $build_list_id_for_sf = substr($build_list_id_for_sf,0,strlen($build_list_id_for_sf)-1);
-    //echo "<!--wim: $build_list_id_for_sf -->\n\n\n";
-    // call to function to send new subscriber to Arcamax.
     $send_to_arcamax = Arcamax($email,$build_list_id_for_sf,$temp_subcampid,$user_ip,'sub'); // sub or unsub
-    //echo "<!--wim: $send_to_arcamax -->\n\n\n";
 
-    // record arcamax server response log
     $insert_log = "INSERT IGNORE INTO arcamaxNewLog (dateTime,email,listid,subcampid,ipaddr,type,response)
           VALUES (NOW(),\"$email\",\"$build_list_id_for_sf\",\"$temp_subcampid\",\"$user_ip\",\"sub\",\"$send_to_arcamax\")";
     $insert_log_result = mysql_query($insert_log);
@@ -209,12 +211,8 @@ if ($_POST['submit'] == 'Update Information') {
   if ($build_list_id_for_br != '') {
     $temp_subcampid = $_SESSION['sf_subcampid'];
     $build_list_id_for_br = substr($build_list_id_for_br,0,strlen($build_list_id_for_br)-1);
-    //echo "<!--br: $build_list_id_for_br -->\n\n\n";
-    // call to function to send new subscriber to Arcamax.
     $send_to_arcamax = Arcamax($email,$build_list_id_for_br,$temp_subcampid,$user_ip,'sub'); // sub or unsub
-    //echo "<!--br: $send_to_arcamax -->\n\n\n";
 
-    // record arcamax server response log
     $insert_log = "INSERT IGNORE INTO arcamaxNewLog (dateTime,email,listid,subcampid,ipaddr,type,response)
           VALUES (NOW(),\"$email\",\"$build_list_id_for_br\",\"$temp_subcampid\",\"$user_ip\",\"sub\",\"$send_to_arcamax\")";
     $insert_log_result = mysql_query($insert_log);
@@ -222,64 +220,73 @@ if ($_POST['submit'] == 'Update Information') {
     $temp_subcampid = ''; // clear temp value
   }
 
-  foreach ($not_checked_array as $not_checked) {
-    // check if this is in our system.  If so, unsub and send to Arcamax
-    // if not in our system, then do nothing.
-    $subcampid = '';
-    if (in_array($not_checked, $_SESSION['r4l_all_listid'])) {
-      $subcampid = $_SESSION['r4l_subcampid'];
-    }
-    if (in_array($not_checked, $_SESSION['fitfab_all_listid'])) {
-      $subcampid = $_SESSION['fitfab_subcampid'];
-    }
-    if (in_array($not_checked, $_SESSION['wim_all_listid'])) {
-      $subcampid = $_SESSION['wim_subcampid'];
-    }
-    if (in_array($not_checked, $_SESSION['sf_all_listid'])) {
-      $subcampid = $_SESSION['sf_subcampid'];
-    }
-    if (in_array($not_checked, $_SESSION['br_all_listid'])) {
-      $subcampid = $_SESSION['br_subcampid'];
-    }
 
-    $check_query = "SELECT * FROM joinEmailActive WHERE email =\"$email\" AND listid=\"$not_checked\"";
+
+  /* *************************************************************** */
+  /*  Do unsubscribes
+  /*  check if this is in our system. If so, unsub, else do nothing
+  /* *************************************************************** */
+  foreach ($not_checked_array as $not_checked) {
+    $check_query = "SELECT * FROM joinEmailActive
+                    WHERE email =\"$email\"
+                    AND listid=\"$not_checked\"";
     $check_query_result = mysql_query($check_query);
     echo mysql_error();
+
     if (mysql_num_rows($check_query_result) == 0) {
       // since this user is not in our system, simply do nothing and continue
     }
     else {
-      // since this user is in our system, remove them and send unsub to arcamax
+      // this is a new un-subscribe
+
+      // get the subcampid
+      $subcampid = '';
+      if (in_array($not_checked, $_SESSION['r4l_all_listid'])) {
+        $subcampid = $_SESSION['r4l_subcampid'];
+      }
+      if (in_array($not_checked, $_SESSION['fitfab_all_listid'])) {
+        $subcampid = $_SESSION['fitfab_subcampid'];
+      }
+      if (in_array($not_checked, $_SESSION['wim_all_listid'])) {
+        $subcampid = $_SESSION['wim_subcampid'];
+      }
+      if (in_array($not_checked, $_SESSION['sf_all_listid'])) {
+        $subcampid = $_SESSION['sf_subcampid'];
+      }
+      if (in_array($not_checked, $_SESSION['br_all_listid'])) {
+        $subcampid = $_SESSION['br_subcampid'];
+      }
+
+      // add id to new unsubs string
       $new_unsub .= "'$not_checked',";
 
-      // insert into joinEmailUnsub
+      // insert into `joinEmailUnsub`
+      // `joinEmailUnsub` logs unsubscribe activity
       $insert_query = "INSERT INTO joinEmailUnsub (dateTime,email,ipaddr,listid,subcampid,source,subsource,errorCode)
             VALUES (NOW(),\"$email\",\"$user_ip\",\"$not_checked\",\"$subcampid\",\"$source\",\"$subsource\",\"per request\")";
       $insert_query_result = mysql_query($insert_query);
       echo mysql_error();
 
+      // delete from `joinEmailActive`
+      $delete_query = "DELETE FROM joinEmailActive
+              WHERE email =\"$email\" AND listid=\"$not_checked\" LIMIT 1";
+      $delete_query_result = mysql_query($delete_query);
+      echo mysql_error();
 
       // get new listid from old listid
       $new_listid = LookupNewListIdByOldListId($not_checked);
 
-      // insert into campaigner
+      // insert into `campaigner`
       $campaigner = "INSERT IGNORE INTO campaigner (dateTime,email,ipaddr,oldListId,newListId,subcampid,source,subsource,type,isProcessed)
               VALUES (NOW(),\"$email\",\"$user_ip\",\"$not_checked\",\"$new_listid\",\"$subcampid\",\"$source\",\"$subsource\",'unsub','N')";
       $campaigner_result = mysql_query($campaigner);
       echo mysql_error();
 
-      // delete from joinEmailActive
-      $delete_query = "DELETE FROM joinEmailActive WHERE email =\"$email\" AND listid=\"$not_checked\" LIMIT 1";
-      $delete_query_result = mysql_query($delete_query);
-      echo mysql_error();
-
       // call to function to send unsub to Arcamax
       $send_to_arcamax = Arcamax($email,$not_checked,$subcampid,$user_ip,'unsub'); // sub or unsub
 
-      if ($_SESSION['user_ip'] == '216.180.167.121') { echo '<!--'.$send_to_arcamax.'<br><br> -->'; }
-
       // record arcamax server response log
-      $insert_log = "INSERT INTO arcamaxNewLog (dateTime,email,listid,subcampid,ipaddr,type,response)
+      $insert_log = "INSERT INTO arcamaxNewLog (dateTime, email,listid,subcampid,ipaddr,type,response)
             VALUES (NOW(),\"$email\",\"$not_checked\",\"$subcampid\",\"$user_ip\",\"unsub\",\"$send_to_arcamax\")";
       $insert_log_result = mysql_query($insert_log);
       echo mysql_error();
@@ -288,13 +295,16 @@ if ($_POST['submit'] == 'Update Information') {
     }
   }
 
+  // remove trailing comma
   $new_sub = substr($new_sub, 0, strlen($new_sub)-1);
   $new_unsub = substr($new_unsub, 0, strlen($new_unsub)-1);
 
+  // generate html to display new subsciptions
   if ($new_sub != '') {
     $get_title = "SELECT title,frequency FROM joinLists WHERE listid IN ($new_sub)";
     $get_title_result = mysql_query($get_title);
     echo mysql_error();
+
     $new_sub = "";
     while ($row = mysql_fetch_object($get_title_result)) {
       $new_sub .= "<font style='color: rgb(20, 80, 106);'><b>$row->title</b></font> <font style='font-size: 11px; color: rgb(70, 70, 70);'>($row->frequency)</font><br>";
@@ -306,6 +316,7 @@ if ($_POST['submit'] == 'Update Information') {
     $new_sub = '';
   }
 
+  // generate html to display new un-subscribes
   if ($new_unsub != '') {
     $get_title = "SELECT title,frequency FROM joinLists WHERE listid IN ($new_unsub)";
     $get_title_result = mysql_query($get_title);
@@ -321,19 +332,20 @@ if ($_POST['submit'] == 'Update Information') {
     $new_unsub = '';
   }
 
-
+  // generate html to display unchanged subscriptions
   $still_subscribe_to = "";
   $get_title = "SELECT title,frequency FROM joinLists WHERE listid IN (SELECT listid FROM joinEmailActive WHERE email = '$email')";
   $get_title_result = mysql_query($get_title);
   echo mysql_error();
+
   while ($row = mysql_fetch_object($get_title_result)) {
     $still_subscribe_to .= "<font style='color: rgb(20, 80, 106);'><b>$row->title</b></font> <font style='font-size: 11px; color: rgb(70, 70, 70);'>($row->frequency)</font><br>";
   }
-
   if ($still_subscribe_to != '') {
     $still_subscribe_to = "<br><b>Your current subscriptions include:</b><br>".$still_subscribe_to;
   }
 
+  // only display if subscription changes have been made
   if ($show_conf_message == true) {
     $confirmation = "
         <tr><td colspan='2' style='line-height:30%'>&nbsp;</td></tr>
@@ -346,10 +358,10 @@ if ($_POST['submit'] == 'Update Information') {
         <tr><td colspan='2' style='line-height:30%'>&nbsp;</td></tr>";
   }
 }
+/* end form submission handler */
 
 // exit the page if email is not set.
 if (trim($_SESSION['email']) == '') {
-  //echo " - Error at line ".__LINE__.". PHPSESSID: ".session_id();
   echo "<div style='font-family: verdana;font-style: normal;font-size: 12px;font-weight: normal;text-decoration: none;'>
       Sorry, something went wrong.
       <a href='"."http://".trim($_SERVER['HTTP_HOST'])."/subctr/index.php?PHPSESSID=".session_id()."'>Click here and try again</a>.
@@ -378,18 +390,16 @@ else {
 //  [MM/DD/YYYY] at [TIME] from [IP ADDRESS HERE]
 $first_signup_ipaddr = '';
 $first_signup_date = '';
-//$first_signup_time = '';
 $temp_email = trim($_SESSION['email']);
 $get_past_data = "SELECT dateTime,ipaddr FROM joinEmailSub WHERE email='$temp_email' ORDER BY dateTime ASC LIMIT 1";
 $get_past_data_result = mysql_query($get_past_data);
 echo mysql_error();
 
-// $first_time == new subscriber
+// $first_time indicates a new subscriber
 $first_time = true;
 while ($get_past_data_row = mysql_fetch_object($get_past_data_result)) {
   $first_signup_ipaddr = $get_past_data_row->ipaddr;
   $first_signup_date = substr($get_past_data_row->dateTime,5,2).'/'.substr($get_past_data_row->dateTime,8,2).'/'.substr($get_past_data_row->dateTime,0,4);
-  //$first_signup_time = substr($get_past_data_row->dateTime,11,8);
   $first_time = false;
 }
 /* END = Subscription History */
@@ -401,6 +411,7 @@ $signup_active = "SELECT * FROM joinEmailActive WHERE email=\"".trim($_SESSION['
 $signup_active_result = mysql_query($signup_active);
 $signup_count = mysql_num_rows($signup_active_result);
 echo mysql_error();
+
 if ($signup_count == 0) {
   $active_subscriber = false;
 }
@@ -428,7 +439,9 @@ fclose($handle);
 
 // get template for more newsletter listing
 // get lists of sister sites
-$active_count = "SELECT * FROM joinLists WHERE isActive = 'Y' AND site NOT LIKE '%$host%'";
+$active_count = "SELECT * FROM joinLists
+                 WHERE isActive = 'Y'
+                 AND site NOT LIKE '%$host%'";
 $active_count_result = mysql_query($active_count);
 echo mysql_error();
 
@@ -445,10 +458,11 @@ $_SESSION['all_listing_array'] = array();
 /* START = Get Listing of NL/SOLO */
 // get lists for current site
 $active_nl_query = "SELECT * FROM joinLists
-          WHERE isActive = 'Y' AND site LIKE '%$host%'
-          ORDER BY sortOrder ASC";
+                    WHERE isActive = 'Y' AND site LIKE '%$host%'
+                    ORDER BY sortOrder ASC";
 $active_nl_result = mysql_query($active_nl_query);
 echo mysql_error();
+
 $xx = 0;
 while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
   array_push($_SESSION['all_listing_array'], $active_nl_row->listid);
@@ -460,20 +474,21 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
   }
 
   // this is insane...
-  $main_newsletter_listing = str_replace("[CHECKBOX_$xx]","<input type='checkbox' value='$active_nl_row->listid' name='aJoinListId[]' $checked>",$main_newsletter_listing);
-  $main_newsletter_listing = str_replace("[MESSAGE_$xx]","<div id='$active_nl_row->listid'></div>",$main_newsletter_listing);
-  $main_newsletter_listing = str_replace("[IMAGE_URL_$xx]",$active_nl_row->logo,$main_newsletter_listing);
-  $main_newsletter_listing = str_replace("[TITLE_$xx]",$active_nl_row->title,$main_newsletter_listing);
-  $main_newsletter_listing = str_replace("[FREQUENCY_$xx]",$active_nl_row->frequency,$main_newsletter_listing);
-  $main_newsletter_listing = str_replace("[DESCRIPTION_$xx]",$active_nl_row->description,$main_newsletter_listing);
+  $main_newsletter_listing = str_replace("[CHECKBOX_$xx]", "<input type='checkbox' value='$active_nl_row->listid' name='aJoinListId[]' $checked>", $main_newsletter_listing);
+  $main_newsletter_listing = str_replace("[MESSAGE_$xx]",  "<div id='$active_nl_row->listid'></div>", $main_newsletter_listing);
+  $main_newsletter_listing = str_replace("[IMAGE_URL_$xx]", $active_nl_row->logo, $main_newsletter_listing);
+  $main_newsletter_listing = str_replace("[TITLE_$xx]", $active_nl_row->title, $main_newsletter_listing);
+  $main_newsletter_listing = str_replace("[FREQUENCY_$xx]", $active_nl_row->frequency, $main_newsletter_listing);
+  $main_newsletter_listing = str_replace("[DESCRIPTION_$xx]", $active_nl_row->description, $main_newsletter_listing);
 }
 
-
 $active_nl_query = "SELECT * FROM joinLists
-          WHERE isActive = 'Y' AND site NOT LIKE '%$host%'
-          ORDER BY site,sortOrder ASC";
+                    WHERE isActive = 'Y'
+                    AND site NOT LIKE '%$host%'
+                    ORDER BY site,sortOrder ASC";
 $active_nl_result = mysql_query($active_nl_query);
 echo mysql_error();
+
 $xx = 0;
 while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
   array_push($_SESSION['all_listing_array'], $active_nl_row->listid);
@@ -485,12 +500,12 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
   }
 
   // this is insane...
-  $more_newsletter_listing = str_replace("[CHECKBOX_$xx]","<input type='checkbox' value='$active_nl_row->listid' name='aJoinListId[]' $checked>",$more_newsletter_listing);
-  $more_newsletter_listing = str_replace("[MESSAGE_$xx]","<div id='$active_nl_row->listid'></div>",$more_newsletter_listing);
-  $more_newsletter_listing = str_replace("[IMAGE_URL_$xx]",$active_nl_row->logo,$more_newsletter_listing);
-  $more_newsletter_listing = str_replace("[TITLE_$xx]",$active_nl_row->title,$more_newsletter_listing);
-  $more_newsletter_listing = str_replace("[FREQUENCY_$xx]",$active_nl_row->frequency,$more_newsletter_listing);
-  $more_newsletter_listing = str_replace("[DESCRIPTION_$xx]",$active_nl_row->description,$more_newsletter_listing);
+  $more_newsletter_listing = str_replace("[CHECKBOX_$xx]", "<input type='checkbox' value='$active_nl_row->listid' name='aJoinListId[]' $checked>", $more_newsletter_listing);
+  $more_newsletter_listing = str_replace("[MESSAGE_$xx]", "<div id='$active_nl_row->listid'></div>", $more_newsletter_listing);
+  $more_newsletter_listing = str_replace("[IMAGE_URL_$xx]", $active_nl_row->logo, $more_newsletter_listing);
+  $more_newsletter_listing = str_replace("[TITLE_$xx]", $active_nl_row->title, $more_newsletter_listing);
+  $more_newsletter_listing = str_replace("[FREQUENCY_$xx]", $active_nl_row->frequency, $more_newsletter_listing);
+  $more_newsletter_listing = str_replace("[DESCRIPTION_$xx]", $active_nl_row->description, $more_newsletter_listing);
 }
 /* END = Get Listing of NL/SOLO */
 ?>
@@ -552,16 +567,6 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
         <?php //} ?>
 
         <?php
-         /*if ($host == 'fitfab') { ?>
-            <?php if ($active_subscriber == false) { ?>
-              <b><?php echo trim($_SESSION['email']); ?></b> is currently <b>not</b> subscribed to any newsletters.<br><br>
-            <?php } else { ?>
-              <?php if ($show_conf_message == false) { ?><b><?php echo trim($_SESSION['email']); ?></b> is currently subscribed to the newsletters checked below.<br><br><?php } ?>
-            <?php } ?>
-        <?php }*/
-        ?>
-
-        <?php
           // this will never be true anymore...see getBounceCountFromArcamax()
           if (ctype_digit($_SESSION['bouncecount']) && $_SESSION['bouncecount'] >= 20) {
             echo "<font color='red'>Note: You may not be receiving your newsletters because we currently show that your e-mail address has bounced out due to delivery problems with your domain. <b>If you would like to restore your subscription, <a href='reset.php'>click here</a></b>.</font><br><br>";
@@ -581,7 +586,6 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
       </td>
     </tr>
     <!---  END OF MANAGE MY NEWSLETTER SECTION -->
-
 
     <!---  START OF Newsletters/Offers -->
     <tr><td colspan="2" style='line-height:30%'>&nbsp;</td></tr>
@@ -606,16 +610,6 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
         ?>
       </td>
     </tr>
-
-    <!--
-    <tr><td colspan="2" style='line-height:30%'>&nbsp;</td></tr>
-    <tr>
-      <td colspan="2">
-        <b>Check the boxes below to subscribe to our newsletters. Uncheck the boxes below to unsubscribe to our newsletters. </b>
-        Please allow 24-48 hours for changes to take effect.
-      </td>
-    </tr>
-    -->
 
     <tr><td colspan="2" style='line-height:30%'>&nbsp;</td></tr>
 
@@ -704,37 +698,30 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
         Your information will <b>not</b> be shared with any third party.
         <br><br>
         <a href="http://<?php echo trim($_SERVER['HTTP_HOST']); ?>/subctr/update_info.php?PHPSESSID=<?php echo session_id(); ?>" onclick="window.parent.scrollTo(0,0);">Click here to update your information</a>.
-        <!--<br><br>
-        <a href="#" rel="#personalize">Test</a>
-        <div class="apple_overlay black" id="personalize">
-          <iframe src="http://<?php echo trim($_SERVER['HTTP_HOST']); ?>/subctr/update_info.php?PHPSESSID=<?php echo session_id(); ?>" frameborder="0" height="440px" width="370px"></iframe>
-        </div>-->
       </td>
     </tr>
     <!---  END OF UPDATE INFORMATION -->
-
 
     <!---  START OF Subscription History -->
     <tr><td colspan="2" style='line-height:30%'>&nbsp;</td></tr>
     <tr>
       <td colspan="2">
         <?php
-          if ($host == 'r4l') { ?>
-            <font color="#0F22B0" size="4" style="font-family: arial;">Subscription History</font>
-          <?php }
-          if ($host == 'fitfab') { ?>
-            <font color="#EC519D" size="4" style="font-family: arial;">Subscription History</font>
-          <?php }
-          if ($host == 'wim') { ?>
-            <font color="#2789BD" size="4" style="font-family: arial;">Subscription History</font>
-          <?php }
-          if ($host == 'sf') { ?>
-            <font color="#F99D1C" size="4" style="font-family: arial;">Subscription History</font>
-          <?php }
-          if ($host == 'br') { ?>
-            <font color="#0F22B0" size="4" style="font-family: arial;">Subscription History</font>
-          <?php }
-        ?>
+        if ($host == 'r4l') { ?>
+          <font color="#0F22B0" size="4" style="font-family: arial;">Subscription History</font>
+        <?php }
+        if ($host == 'fitfab') { ?>
+          <font color="#EC519D" size="4" style="font-family: arial;">Subscription History</font>
+        <?php }
+        if ($host == 'wim') { ?>
+          <font color="#2789BD" size="4" style="font-family: arial;">Subscription History</font>
+        <?php }
+        if ($host == 'sf') { ?>
+          <font color="#F99D1C" size="4" style="font-family: arial;">Subscription History</font>
+        <?php }
+        if ($host == 'br') { ?>
+          <font color="#0F22B0" size="4" style="font-family: arial;">Subscription History</font>
+        <?php } ?>
       </td>
     </tr>
 
@@ -749,22 +736,21 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
         <?php } ?>
         If you have any questions, please
         <?php
-          if ($host == 'r4l') { ?>
-            <a href="http://www.recipe4living.com/contact/" target="_blank">contact us here</a>.
-          <?php }
-          if ($host == 'fitfab') { ?>
-            <a href="http://www.fitandfabliving.com/index.php/contact-us.html" target="_blank">contact us here</a>.
-          <?php }
-          if ($host == 'wim') { ?>
-            <a href="http://www.workitmom.com/contact/" target="_blank">contact us here</a>.
-          <?php }
-          if ($host == 'sf') { ?>
-            <a href="http://www.savvyfork.com/component/contactenhanced/contact/31.html" target="_blank">contact us here</a>.
-          <?php }
-          if ($host == 'br') { ?>
-            <a href="http://www.recipe4living.com/contact/" target="_blank">contact us here</a>.
-          <?php }
-        ?>
+        if ($host == 'r4l') { ?>
+          <a href="http://www.recipe4living.com/contact/" target="_blank">contact us here</a>.
+        <?php }
+        if ($host == 'fitfab') { ?>
+          <a href="http://www.fitandfabliving.com/index.php/contact-us.html" target="_blank">contact us here</a>.
+        <?php }
+        if ($host == 'wim') { ?>
+          <a href="http://www.workitmom.com/contact/" target="_blank">contact us here</a>.
+        <?php }
+        if ($host == 'sf') { ?>
+          <a href="http://www.savvyfork.com/component/contactenhanced/contact/31.html" target="_blank">contact us here</a>.
+        <?php }
+        if ($host == 'br') { ?>
+          <a href="http://www.recipe4living.com/contact/" target="_blank">contact us here</a>.
+        <?php } ?>
       </td>
     </tr>
     <!---  END OF Subscription History -->
@@ -781,7 +767,6 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
       var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
     })();
   </script>
-
 
 </body>
 </html>
