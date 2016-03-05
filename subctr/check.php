@@ -163,7 +163,7 @@ if ($_POST['submit'] == 'Update Information') {
   if ($build_list_id_for_r4l != '') {
     $temp_subcampid = $_SESSION['r4l_subcampid'];
     $build_list_id_for_r4l = substr($build_list_id_for_r4l,0,strlen($build_list_id_for_r4l)-1);
-    $send_to_arcamax = Arcamax($email,$build_list_id_for_r4l,$temp_subcampid,$user_ip,'sub'); // sub or unsub
+    $send_to_arcamax = true; // sub or unsub
 
     $insert_log = "INSERT IGNORE INTO arcamaxNewLog (dateTime,email,listid,subcampid,ipaddr,type,response)
           VALUES (NOW(),\"$email\",\"$build_list_id_for_r4l\",\"$temp_subcampid\",\"$user_ip\",\"sub\",\"$send_to_arcamax\")";
@@ -175,7 +175,7 @@ if ($_POST['submit'] == 'Update Information') {
   if ($build_list_id_for_ff != '') {
     $temp_subcampid = $_SESSION['fitfab_subcampid'];
     $build_list_id_for_ff = substr($build_list_id_for_ff,0,strlen($build_list_id_for_ff)-1);
-    $send_to_arcamax = Arcamax($email,$build_list_id_for_ff,$temp_subcampid,$user_ip,'sub'); // sub or unsub
+    $send_to_arcamax = true; // sub or unsub
 
     $insert_log = "INSERT IGNORE INTO arcamaxNewLog (dateTime,email,listid,subcampid,ipaddr,type,response)
           VALUES (NOW(),\"$email\",\"$build_list_id_for_ff\",\"$temp_subcampid\",\"$user_ip\",\"sub\",\"$send_to_arcamax\")";
@@ -187,7 +187,7 @@ if ($_POST['submit'] == 'Update Information') {
   if ($build_list_id_for_wim != '') {
     $temp_subcampid = $_SESSION['wim_subcampid'];
     $build_list_id_for_wim = substr($build_list_id_for_wim,0,strlen($build_list_id_for_wim)-1);
-    $send_to_arcamax = Arcamax($email,$build_list_id_for_wim,$temp_subcampid,$user_ip,'sub'); // sub or unsub
+    $send_to_arcamax = true; // sub or unsub
 
     $insert_log = "INSERT IGNORE INTO arcamaxNewLog (dateTime,email,listid,subcampid,ipaddr,type,response)
           VALUES (NOW(),\"$email\",\"$build_list_id_for_wim\",\"$temp_subcampid\",\"$user_ip\",\"sub\",\"$send_to_arcamax\")";
@@ -199,7 +199,7 @@ if ($_POST['submit'] == 'Update Information') {
   if ($build_list_id_for_sf != '') {
     $temp_subcampid = $_SESSION['sf_subcampid'];
     $build_list_id_for_sf = substr($build_list_id_for_sf,0,strlen($build_list_id_for_sf)-1);
-    $send_to_arcamax = Arcamax($email,$build_list_id_for_sf,$temp_subcampid,$user_ip,'sub'); // sub or unsub
+    $send_to_arcamax = true; // sub or unsub
 
     $insert_log = "INSERT IGNORE INTO arcamaxNewLog (dateTime,email,listid,subcampid,ipaddr,type,response)
           VALUES (NOW(),\"$email\",\"$build_list_id_for_sf\",\"$temp_subcampid\",\"$user_ip\",\"sub\",\"$send_to_arcamax\")";
@@ -211,7 +211,7 @@ if ($_POST['submit'] == 'Update Information') {
   if ($build_list_id_for_br != '') {
     $temp_subcampid = $_SESSION['sf_subcampid'];
     $build_list_id_for_br = substr($build_list_id_for_br,0,strlen($build_list_id_for_br)-1);
-    $send_to_arcamax = Arcamax($email,$build_list_id_for_br,$temp_subcampid,$user_ip,'sub'); // sub or unsub
+    $send_to_arcamax = true; // sub or unsub
 
     $insert_log = "INSERT IGNORE INTO arcamaxNewLog (dateTime,email,listid,subcampid,ipaddr,type,response)
           VALUES (NOW(),\"$email\",\"$build_list_id_for_br\",\"$temp_subcampid\",\"$user_ip\",\"sub\",\"$send_to_arcamax\")";
@@ -283,7 +283,7 @@ if ($_POST['submit'] == 'Update Information') {
       echo mysql_error();
 
       // call to function to send unsub to Arcamax
-      $send_to_arcamax = Arcamax($email,$not_checked,$subcampid,$user_ip,'unsub'); // sub or unsub
+      $send_to_arcamax = true; // sub or unsub
 
       // record arcamax server response log
       $insert_log = "INSERT INTO arcamaxNewLog (dateTime, email,listid,subcampid,ipaddr,type,response)
