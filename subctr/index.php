@@ -22,9 +22,13 @@ else {
 include_once("config.php");
 
 $_SESSION['passed_captcha'] = 'no';
+$message = '';
 
 // Result of entering email and captcha code and hitting submit
-if ($_POST['submit'] == 'Sign In' && $_POST['email'] != '' && strlen($_POST['security_code']) == 3) {
+if (isset($_POST['submit']) &&
+    $_POST['submit'] == 'Sign In' &&
+    $_POST['email'] != '' &&
+    strlen($_POST['security_code']) == 3) {
   $email = addslashes($_POST['email']);
 
   // correct security code entered

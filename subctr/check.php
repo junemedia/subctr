@@ -44,7 +44,7 @@ $show_conf_message = false;
 /* ***************************************************************** */
 /*  handle form submission                                           */
 /* ***************************************************************** */
-if ($_POST['submit'] == 'Update Information') {
+if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
   // getting an array of `joinLists`.`listid` (395, 394, etc...)
   // in other words a list of all the newsletters the user would like
   // to start/continue to receive
@@ -375,13 +375,13 @@ else {
   echo mysql_error();
   $userData_row = mysql_fetch_object($get_user_data_result);
 
-  $_SESSION['fname'] = $userData_row->fname;
-  $_SESSION['lname'] = $userData_row->lname;
-  $_SESSION['zip'] = $userData_row->zip;
-  $_SESSION['gender'] = $userData_row->gender;
-  $_SESSION['day'] = $userData_row->day;
-  $_SESSION['month'] = $userData_row->month;
-  $_SESSION['year'] = $userData_row->year;
+  $_SESSION['fname'] = @$userData_row->fname;
+  $_SESSION['lname'] = @$userData_row->lname;
+  $_SESSION['zip'] = @$userData_row->zip;
+  $_SESSION['gender'] = @$userData_row->gender;
+  $_SESSION['day'] = @$userData_row->day;
+  $_SESSION['month'] = @$userData_row->month;
+  $_SESSION['year'] = @$userData_row->year;
   /* END = Get User Data */
 }
 
@@ -571,7 +571,7 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
           if (ctype_digit($_SESSION['bouncecount']) && $_SESSION['bouncecount'] >= 20) {
             echo "<font color='red'>Note: You may not be receiving your newsletters because we currently show that your e-mail address has bounced out due to delivery problems with your domain. <b>If you would like to restore your subscription, <a href='reset.php'>click here</a></b>.</font><br><br>";
           }
-          if ($_SESSION['BounceCountReset'] == true) {
+          if (isset($_SESSION['BounceCountReset']) && $_SESSION['BounceCountReset'] == true) {
             $_SESSION['BounceCountReset'] = false;
             echo "<font color='red'>Thank you! Your subscription has been <b>restored</b>. You should start to receive e-mails within 24-48 hours. If you still do not receive your newsletters, <a href='http://www.recipe4living.com/contact/' target=_blank>contact us here</a>.</font><br><br>";
           }
