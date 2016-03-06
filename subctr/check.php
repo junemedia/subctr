@@ -31,11 +31,11 @@ if ($_SESSION['passed_captcha'] == 'no') {
 }
 
 /***************************** debugging ***************************/
-/* if ($_SESSION['email'] == "johns@junemedia.com") { */
-/*   echo '<pre style="font-size: 80%;">'; */
-/*   print_r($_SESSION); */
-/*   echo '</pre>'; */
-/* } */
+if ($debug === true) {
+  echo '<pre style="font-size: 80%;">';
+  print_r($_SESSION);
+  echo '</pre>';
+}
 /**************************** /debugging ***************************/
 
 $confirmation = "";
@@ -66,11 +66,11 @@ if ($_POST['submit'] == 'Update Information') {
   //if($source == ''){$source = "$host Sub Center";}
 
   /***************************** debugging ***************************/
-  /* if ($_SESSION['email'] == "johns@junemedia.com") { */
-  /*     echo '<pre style="font-size: 80%">'; */
-  /*     print_r($_POST); */
-  /*     echo '</pre>'; */
-  /* } */
+  if ($debug === true) {
+      echo '<pre style="font-size: 80%">';
+      print_r($_POST);
+      echo '</pre>';
+  }
   /**************************** /debugging ***************************/
 
   // array of unselected ids

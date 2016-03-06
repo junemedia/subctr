@@ -5,8 +5,12 @@ while (list($key,$val) = each($_POST)) { $$key = $val; }
 while (list($key,$val) = each($_GET)) { $$key = $val; }
 */
 
-
 $http_host = trim( $_SERVER['HTTP_HOST'] );
+
+if ( strpos( $http_host, 'stage' ) === 0 ) {
+  $debug = true;
+  ini_set('display_errors', true);
+}
 
 //if (trim($_SERVER['HTTP_HOST']) == 'sf.popularliving.com') {
 if ( strpos( trim( $http_host ), 'sf.popularliving.com' ) !== false ) {
