@@ -42,6 +42,42 @@ if ($_SESSION['passed_captcha'] == 'no') {
 $confirmation = "";
 $show_conf_message = false;
 
+
+
+
+
+
+
+/* ***************************************************************** */
+/*  get Maropost data                                                */
+/* ***************************************************************** */
+// get the Maropost data for the contact
+$contact = getContact($_SESSION['email']);
+$list_subscriptions = $contact['list_subscriptions'];
+$mp_sorted_subs = sortSubscriptions($list_subscriptions);
+// if contact doesn't have an id, it's new
+$newContact = $contact['id'] === null;
+
+// get lists contact is subscribed to
+//$contactLists = getLists($contact);
+
+
+/***************************** debugging ***************************/
+/* echo '<pre style="font-size: 80%;">'; */
+/* print_r($mp_sorted_subs); */
+/* print_r($list_subscriptions); */
+/* echo "{$contact['email']}: {$contact['id']}"; */
+/* echo '</pre>'; */
+/**************************** /debugging ***************************/
+
+
+
+
+
+
+
+
+
 /* ***************************************************************** */
 /*  handle form submission                                           */
 /* ***************************************************************** */
@@ -103,7 +139,8 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
     $check_query_result = mysql_query($check_query);
     echo mysql_error();
 
-    // this is a new subscription
+
+    // this is a new [re-]subscription
     if (mysql_num_rows($check_query_result) == 0) {
 
       // get the subcampid and add to appropriate $build_list
@@ -129,7 +166,7 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
         $build_list_id_for_br .= $checked.',';
       }
 
-      // add id to new subs string
+      // add id to $new_subs string
       $new_sub .= "'$checked',";
 
       // insert into `joinEmailSub`
@@ -393,32 +430,6 @@ else {
 }
 
 
-/* ***************************************************************** */
-/*  get Maropost data                                                */
-/* ***************************************************************** */
-// get the Maropost data for the contact
-$contact = getContact($_SESSION['email']);
-$list_subscriptions = $contact['list_subscriptions'];
-// if contact doesn't have an id, it's new
-$newContact = $contact['id'] === null;
-
-// get lists contact is subscribed to
-//$contactLists = getLists($contact);
-
-
-/***************************** debugging ***************************/
-echo '<pre style="font-size: 80%;">';
-print_r($list_subscriptions);
-echo "{$contact['email']}: {$contact['id']}";
-echo '</pre>';
-/**************************** /debugging ***************************/
-
-
-
-
-
-
-
 
 /******************** START = Subscription History *******************/
 //  [MM/DD/YYYY] at [TIME] from [IP ADDRESS HERE]
@@ -525,7 +536,7 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
   array_push($_SESSION['all_listing_array'], $active_nl_row->listid);
 
   $xx++;
-  $checked = isSubscribed($active_nl_row->listid, $active_signup_array, $list_subscriptions) ? 'checked' : '';
+  $checked = isSubscribed($active_nl_row->listid, $active_signup_array, $mp_sorted_subs) ? 'checked' : '';
 
   // this is insane...
   $main_newsletter_listing = str_replace("[CHECKBOX_$xx]", "<input type='checkbox' value='$active_nl_row->listid' name='aJoinListId[]' $checked>", $main_newsletter_listing);
@@ -549,7 +560,7 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
   array_push($_SESSION['all_listing_array'], $active_nl_row->listid);
 
   $xx++;
-  $checked = isSubscribed($active_nl_row->listid, $active_signup_array, $list_subscriptions) ? 'checked' : '';
+  $checked = isSubscribed($active_nl_row->listid, $active_signup_array, $mp_sorted_subs) ? 'checked' : '';
 
   // this is insane...
   $more_newsletter_listing = str_replace("[CHECKBOX_$xx]", "<input type='checkbox' value='$active_nl_row->listid' name='aJoinListId[]' $checked>", $more_newsletter_listing);

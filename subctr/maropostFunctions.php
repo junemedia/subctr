@@ -3,9 +3,25 @@
 define('MP_API_KEY', 'c300eeefb54ee6e746260585befa15a10a947a86');
 define('MP_ACCOUNT_ID', 694);
 
-function isSubscribed($list_id, $signup_array, $list_subscriptions = array()) {
+function sortSubscriptions($list_subscriptions) {
+  $sorted = array(
+    'subscribed' => array(),
+    'unsubscribed' => array()
+  );
+
+  foreach ($list_subscriptions as $list) {
+    $status = strtolower($list['status']);
+    $sorted[$status][$list['list_id']] = $list['name'];
+  }
+  return $sorted;
+}
+
+function isSubscribed($list_id, $signup_array, $sorted_subs) {
   global $maropostMap;
+
   // this is all the old system does
+  // check if this id is in the array of user's current subs
+  // if so, we can just return true
   if (in_array($list_id, $signup_array)) {
     return true;
   }
@@ -13,23 +29,15 @@ function isSubscribed($list_id, $signup_array, $list_subscriptions = array()) {
   // now, we're going to check if maropost has contact subscribed to
   // this list
 
-  // check if there's a mapping for this id and if so get the mapped id
+  // check if there's a mapping for this id and if so check if
+  // mapped id is in $sorted_subs array
   if (isset($maropostMap[$list_id])) {
     $mapped_id = $maropostMap[$list_id]['id'];
-
-    // this is dumb, for now...
-    // go through each of the contact's subscription lists to find the
-    // one with the mapped id, if it exists
-    foreach ($list_subscriptions as $list) {
-      if ($mapped_id == $list['list_id']) {
-        // test subscribed status and return result
-        return $list['status'] == 'Subscribed';
-      }
-    }
+    return isset($sorted_subs['subscribed'][$mapped_id]);
   }
 
-  // if we've gotten here contact is not subscribed in either our
-  // system or Maropost's
+  // if we've gotten here, and we shouldn't, contact is not subscribed
+  // in either our system or Maropost's
   return false;
 }
 
