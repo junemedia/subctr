@@ -1,6 +1,7 @@
 <?php
 
 include_once('session_handlers.php');
+include 'maropostMap.php';
 
 
 if (!(isset($_POST['PHPSESSID'])) && !(isset($_GET['PHPSESSID']))) {
@@ -60,8 +61,8 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
   // sometimes
   $email = $_SESSION['email'];
   $user_ip = $_SESSION['user_ip'];
-  $source = $_SESSION['source'];
-  $subsource = $_SESSION['subsource'];
+  $source = @$_SESSION['source'];
+  $subsource = @$_SESSION['subsource'];
   if ($subsource == '') { $subsource = $host; }
   //if($source == ''){$source = "$host Sub Center";}
 
@@ -95,7 +96,10 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
   /*  if not, then add as new signup
   /* *************************************************************** */
   foreach ($aJoinListId as $checked) {
-    $check_query = "SELECT * FROM joinEmailActive WHERE email =\"$email\" AND listid=\"$checked\"";
+    $check_query = "SELECT *
+                    FROM joinEmailActive
+                    WHERE email =\"$email\"
+                    AND listid=\"$checked\"";
     $check_query_result = mysql_query($check_query);
     echo mysql_error();
 
@@ -368,8 +372,11 @@ if (trim($_SESSION['email']) == '') {
         </div>";
   exit;
 }
+
+// pretty sure there's no need to enclose this in an else block due to
+// the exit in the if block(?), but leaving for now
 else {
-  /* START = Get User Data */
+  /********************** START = Get User Data **********************/
   $get_user_data = "SELECT * FROM userData WHERE email=\"".trim($_SESSION['email'])."\" LIMIT 1";
   $get_user_data_result = mysql_query($get_user_data);
   echo mysql_error();
@@ -386,7 +393,34 @@ else {
 }
 
 
-/* START = Subscription History */
+/* ***************************************************************** */
+/*  get Maropost data                                                */
+/* ***************************************************************** */
+// get the Maropost data for the contact
+$contact = getContact($_SESSION['email']);
+$list_subscriptions = $contact['list_subscriptions'];
+// if contact doesn't have an id, it's new
+$newContact = $contact['id'] === null;
+
+// get lists contact is subscribed to
+//$contactLists = getLists($contact);
+
+
+/***************************** debugging ***************************/
+echo '<pre style="font-size: 80%;">';
+print_r($list_subscriptions);
+echo "{$contact['email']}: {$contact['id']}";
+echo '</pre>';
+/**************************** /debugging ***************************/
+
+
+
+
+
+
+
+
+/******************** START = Subscription History *******************/
 //  [MM/DD/YYYY] at [TIME] from [IP ADDRESS HERE]
 $first_signup_ipaddr = '';
 $first_signup_date = '';
@@ -397,6 +431,8 @@ echo mysql_error();
 
 // $first_time indicates a new subscriber
 $first_time = true;
+// if the previous query returned a result, then they're not a
+// first time subscriber
 while ($get_past_data_row = mysql_fetch_object($get_past_data_result)) {
   $first_signup_ipaddr = $get_past_data_row->ipaddr;
   $first_signup_date = substr($get_past_data_row->dateTime,5,2).'/'.substr($get_past_data_row->dateTime,8,2).'/'.substr($get_past_data_row->dateTime,0,4);
@@ -405,9 +441,12 @@ while ($get_past_data_row = mysql_fetch_object($get_past_data_result)) {
 /* END = Subscription History */
 
 
-/* START = Manage My Newsletters */
+/******************* START = Manage My Newsletters *******************/
+// get all lists this user is subscribed to
 $active_signup_array = array();
-$signup_active = "SELECT * FROM joinEmailActive WHERE email=\"".trim($_SESSION['email'])."\"";
+$signup_active = "SELECT *
+                  FROM joinEmailActive
+                  WHERE email=\"".trim($_SESSION['email'])."\"";
 $signup_active_result = mysql_query($signup_active);
 $signup_count = mysql_num_rows($signup_active_result);
 echo mysql_error();
@@ -424,22 +463,32 @@ else {
 /* END = Manage My Newsletters */
 
 
-/* START = GET LISTING TEMPLATE */
+/******************** START = GET LISTING TEMPLATE *******************/
 // get template for main site listing
-$active_count = "SELECT * FROM joinLists WHERE isActive = 'Y' AND site LIKE '%$host%'";
+// the whole thing is so dumb there has to be a reason for it...
+// queries db to get number of lists for the current site, then based
+// on that number loads a template that has that number of slots and
+// saves it as a string
+
+// this is just to get the number of lists for the current site
+$active_count = "SELECT *
+                 FROM joinLists
+                 WHERE isActive = 'Y'
+                 AND site LIKE '%$host%'";
 $active_count_result = mysql_query($active_count);
 echo mysql_error();
 
 // get contents of a file into a string
-// this is so dumb, there has to be a good reason for it...
 $filename = getcwd()."/templates/".mysql_num_rows($active_count_result)."_slots.html";
 $handle = fopen($filename, "r");
 $main_newsletter_listing = fread($handle, filesize($filename));
 fclose($handle);
 
+// same process as above for lists for sister sites...
 // get template for more newsletter listing
 // get lists of sister sites
-$active_count = "SELECT * FROM joinLists
+$active_count = "SELECT *
+                 FROM joinLists
                  WHERE isActive = 'Y'
                  AND site NOT LIKE '%$host%'";
 $active_count_result = mysql_query($active_count);
@@ -455,10 +504,18 @@ fclose($handle);
 
 $_SESSION['all_listing_array'] = array();
 
-/* START = Get Listing of NL/SOLO */
+/******************* START = Get Listing of NL/SOLO ******************/
+// we just did this above, but whatevs...
+// get lists for current site, and dump list info into the template
+// chosen above
+//
+// also builds SESSION all_listing_array in the process
+
 // get lists for current site
-$active_nl_query = "SELECT * FROM joinLists
-                    WHERE isActive = 'Y' AND site LIKE '%$host%'
+$active_nl_query = "SELECT *
+                    FROM joinLists
+                    WHERE isActive = 'Y'
+                    AND site LIKE '%$host%'
                     ORDER BY sortOrder ASC";
 $active_nl_result = mysql_query($active_nl_query);
 echo mysql_error();
@@ -468,10 +525,7 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
   array_push($_SESSION['all_listing_array'], $active_nl_row->listid);
 
   $xx++;
-  $checked = '';
-  if (in_array($active_nl_row->listid, $active_signup_array)) {
-    $checked = 'checked';
-  }
+  $checked = isSubscribed($active_nl_row->listid, $active_signup_array, $list_subscriptions) ? 'checked' : '';
 
   // this is insane...
   $main_newsletter_listing = str_replace("[CHECKBOX_$xx]", "<input type='checkbox' value='$active_nl_row->listid' name='aJoinListId[]' $checked>", $main_newsletter_listing);
@@ -482,10 +536,11 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
   $main_newsletter_listing = str_replace("[DESCRIPTION_$xx]", $active_nl_row->description, $main_newsletter_listing);
 }
 
+// do the same for the list of the sister sites...
 $active_nl_query = "SELECT * FROM joinLists
                     WHERE isActive = 'Y'
                     AND site NOT LIKE '%$host%'
-                    ORDER BY site,sortOrder ASC";
+                    ORDER BY site, sortOrder ASC";
 $active_nl_result = mysql_query($active_nl_query);
 echo mysql_error();
 
@@ -494,10 +549,7 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
   array_push($_SESSION['all_listing_array'], $active_nl_row->listid);
 
   $xx++;
-  $checked = '';
-  if (in_array($active_nl_row->listid, $active_signup_array)) {
-    $checked = 'checked';
-  }
+  $checked = isSubscribed($active_nl_row->listid, $active_signup_array, $list_subscriptions) ? 'checked' : '';
 
   // this is insane...
   $more_newsletter_listing = str_replace("[CHECKBOX_$xx]", "<input type='checkbox' value='$active_nl_row->listid' name='aJoinListId[]' $checked>", $more_newsletter_listing);

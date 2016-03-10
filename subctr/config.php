@@ -97,5 +97,6 @@ if (mysql_num_rows($banned_ip_result) == 1) {
 }
 
 include_once("functions.php");
+include_once("maropostFunctions.php");
 
 ?>
