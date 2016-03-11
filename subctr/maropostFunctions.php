@@ -4,6 +4,13 @@ define('MP_API_KEY', 'c300eeefb54ee6e746260585befa15a10a947a86');
 define('MP_ACCOUNT_ID', 694);
 
 function sortSubscriptions($list_subscriptions) {
+  // it's possible, I think, that an actual null value may be getting
+  // passed in here theoretically, so be careful about just setting
+  // a default value for this
+  if ($list_subscriptions == null) {
+    $list_subscriptions = array();
+  }
+
   $sorted = array(
     'subscribed' => array(),
     'unsubscribed' => array()
@@ -39,6 +46,48 @@ function isSubscribed($list_id, $signup_array, $sorted_subs) {
   // if we've gotten here, and we shouldn't, contact is not subscribed
   // in either our system or Maropost's
   return false;
+}
+
+// todo: I think this could actually happen in contactSubscribe by
+// including the email address there
+function addContact($email) {
+  $api_key = MP_API_KEY;
+  $api_root = 'http://api.maropost.com/accounts/' . MP_ACCOUNT_ID;
+  $api_headers = array(
+    'Accept: application/json',
+    'Content-Type: application/json'
+  );
+
+  $api_endpoint = "contacts.json";
+
+  $payload = array(
+    'contact' => array(
+      'email' => $email
+    )
+  );
+  $json = json_encode($payload);
+
+  $ch = curl_init("$api_root/$api_endpoint?auth_token=$api_key");
+  curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, $api_headers);
+  curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+  $response = curl_exec($ch);
+  $info = curl_getinfo($ch);
+  curl_close($ch);
+
+  // getting back the contacts json data
+  // decode as an associative array
+  $contact = json_decode($response, true);
+
+  // todo: really need better checking here...
+  if (json_last_error() === JSON_ERROR_NONE) {
+    // nothing for now
+  }
+  else { }
+
+  $sorted_subs = sortSubscriptions(@$contact['list_subscriptions']);
+  return array( $contact, $sorted_subs );
 }
 
 function contactSubscribe($contact, $list_id, $subscribed = true) {
@@ -81,9 +130,6 @@ function contactSubscribe($contact, $list_id, $subscribed = true) {
 function contactUnsubscribe($contact, $list_id) {
   return contactSubscribe($contact, $list_id, false);
 }
-
-
-
 
 function getAllLists() {
   $api_key = MP_API_KEY;
@@ -133,8 +179,10 @@ function getContact($contactEmail) {
 
   // I think we could just check for a http status code of 200 here,
   // but for now check that it's valid JSON and has a non-empty id attribute
-  if (json_last_error() === JSON_ERROR_NONE && isset($contact['id']) && $contact['id'] != '') {
-    return $contact;
+  if (json_last_error() === JSON_ERROR_NONE &&
+      isset($contact['id']) &&
+      $contact['id'] != '') {
+    // nothing for now
   }
   else {
     $contact = array(
@@ -142,9 +190,11 @@ function getContact($contactEmail) {
       'email' => $contactEmail,
       'list_subscriptions' => array()
     );
-    return $contact;
   }
+  $sorted_subs = sortSubscriptions(@$contact['list_subscriptions']);
+  return array( $contact, $sorted_subs );
 }
+
 function getContactSubscriptions($contactEmail) {
   // getting an associative array here
   $contactData = getContactData($contactEmail);

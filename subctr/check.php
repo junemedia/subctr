@@ -52,11 +52,7 @@ $show_conf_message = false;
 /*  get Maropost data                                                */
 /* ***************************************************************** */
 // get the Maropost data for the contact
-$contact = getContact($_SESSION['email']);
-$list_subscriptions = $contact['list_subscriptions'];
-$mp_sorted_subs = sortSubscriptions($list_subscriptions);
-// if contact doesn't have an id, it's new
-$newContact = $contact['id'] === null;
+list( $contact, $mp_sorted_subs ) = getContact($_SESSION['email']);
 
 /***************************** debugging ***************************/
 /* echo '<pre style="font-size: 80%;">'; */
@@ -138,8 +134,14 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
       $mapped_id = $maropostMap[$checked]['id'];
 
       if (!isset($mp_sorted_subs['subscribed'][$mapped_id])) {
+
+        // if contact doesn't already exist, add them to maropost
+        if ($contact['id'] == 0) {
+          // get the Maropost data for the contact
+          list( $contact, $mp_sorted_subs ) = getContact($_SESSION['email']);
+        }
+
         contactSubscribe($contact, $mapped_id);
-        echo 'mp sub to '.$mapped_id.' '.$mp_sorted_subs['unsubscribed'][$mapped_id].'<br>';
       }
       else {
         //echo 'already subbed to '.$mapped_id.' '.$mp_sorted_subs['subscribed'][$mapped_id].'<br>';
@@ -295,9 +297,6 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
       }
 
     }
-
-
-
 
 
     if (mysql_num_rows($check_query_result) == 0) {

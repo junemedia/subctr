@@ -414,6 +414,13 @@ function getXmlValueByTag($inXmlset,$needle) {
 
 
 function LookupImpressionWise($email_addr) {
+
+  // added by john during testing, because IW doesn't like my domain
+  // for some reason
+  if (strpos($email_addr, 'ultranaut.com') !== false) {
+    return true;
+  }
+
 	$isValid = true;
 	$isValid_msg = 'Y';
 	$sPostingUrl = "http://post.impressionwise.com/fastfeed.aspx?code=560020&pwd=SilCar&email=$email_addr";
