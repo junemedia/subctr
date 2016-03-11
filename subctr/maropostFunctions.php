@@ -41,6 +41,50 @@ function isSubscribed($list_id, $signup_array, $sorted_subs) {
   return false;
 }
 
+function contactSubscribe($contact, $list_id, $subscribed = true) {
+  $api_key = MP_API_KEY;
+  $api_root = 'http://api.maropost.com/accounts/' . MP_ACCOUNT_ID;
+  $api_headers = array(
+    'Accept: application/json',
+    'Content-Type: application/json'
+  );
+
+  $api_endpoint = "lists/$list_id/contacts/{$contact['id']}.json";
+
+  $payload = array(
+    'contact' => array(
+      'subscribed' => $subscribed
+    )
+  );
+  $json = json_encode($payload);
+
+  $ch = curl_init("$api_root/$api_endpoint?auth_token=$api_key");
+  curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, $api_headers);
+  curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+  $response = curl_exec($ch);
+  $info = curl_getinfo($ch);
+  curl_close($ch);
+
+  // decode as an associative array
+  $response = json_decode($response, true);
+
+  // should add some better checking here
+  if (json_last_error() === JSON_ERROR_NONE) {
+    return $response;
+  }
+  else { }
+
+}
+
+function contactUnsubscribe($contact, $list_id) {
+  return contactSubscribe($contact, $list_id, false);
+}
+
+
+
+
 function getAllLists() {
   $api_key = MP_API_KEY;
   $api_root = 'http://api.maropost.com/accounts/' . MP_ACCOUNT_ID;

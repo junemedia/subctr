@@ -58,10 +58,6 @@ $mp_sorted_subs = sortSubscriptions($list_subscriptions);
 // if contact doesn't have an id, it's new
 $newContact = $contact['id'] === null;
 
-// get lists contact is subscribed to
-//$contactLists = getLists($contact);
-
-
 /***************************** debugging ***************************/
 /* echo '<pre style="font-size: 80%;">'; */
 /* print_r($mp_sorted_subs); */
@@ -69,11 +65,6 @@ $newContact = $contact['id'] === null;
 /* echo "{$contact['email']}: {$contact['id']}"; */
 /* echo '</pre>'; */
 /**************************** /debugging ***************************/
-
-
-
-
-
 
 
 
@@ -102,6 +93,7 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
   if ($subsource == '') { $subsource = $host; }
   //if($source == ''){$source = "$host Sub Center";}
 
+
   /***************************** debugging ***************************/
   /* if ($debug === true) { */
   /*     echo '<pre style="font-size: 80%">'; */
@@ -109,6 +101,7 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
   /*     echo '</pre>'; */
   /* } */
   /**************************** /debugging ***************************/
+
 
   // array of unselected ids
   // diff the array of all lists with the array we received, in other
@@ -139,6 +132,21 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
     $check_query_result = mysql_query($check_query);
     echo mysql_error();
 
+    /************************ do Maropost subs ************************/
+    // if not already subscribed, make call to Maropost
+    if (isset($maropostMap[$checked])) {
+      $mapped_id = $maropostMap[$checked]['id'];
+
+      if (!isset($mp_sorted_subs['subscribed'][$mapped_id])) {
+        contactSubscribe($contact, $mapped_id);
+        echo 'mp sub to '.$mapped_id.' '.$mp_sorted_subs['unsubscribed'][$mapped_id].'<br>';
+      }
+      else {
+        //echo 'already subbed to '.$mapped_id.' '.$mp_sorted_subs['subscribed'][$mapped_id].'<br>';
+      }
+      // clear $mapped_id
+      $mapped_id = 0;
+    }
 
     // this is a new [re-]subscription
     if (mysql_num_rows($check_query_result) == 0) {
@@ -274,6 +282,24 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
     $check_query_result = mysql_query($check_query);
     echo mysql_error();
 
+
+    /************************ do Maropost un-subs *************************/
+    if (isset($maropostMap[$not_checked])) {
+      $mapped_id = $maropostMap[$not_checked]['id'];
+
+      if (isset($mp_sorted_subs['subscribed'][$mapped_id])) {
+        contactUnsubscribe($contact, $mapped_id);
+      }
+      else {
+        //echo 'not subbed to '.$mapped_id.' '.$mp_sorted_subs['subscribed'][$mapped_id].'<br>';
+      }
+
+    }
+
+
+
+
+
     if (mysql_num_rows($check_query_result) == 0) {
       // since this user is not in our system, simply do nothing and continue
     }
@@ -398,6 +424,8 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
           </td></tr>
         <tr><td colspan='2' style='line-height:30%'>&nbsp;</td></tr>";
   }
+  // reload page: refreshes the MP data
+  header("Location: {$_SERVER['PHP_SELF']}");
 }
 /* end form submission handler */
 
