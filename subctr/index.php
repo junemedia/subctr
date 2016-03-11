@@ -78,10 +78,24 @@ if (isset($_POST['submit']) &&
           }
         }
 
+        /* if ($error == '') { */
+        /*   if (LookupImpressionWise($email) == false) { */
+        /*     $error = "Your e-mail address is invalid. Please try again. If you continue to have an issue, please contact us <a href='http://www.recipe4living.com/contact/' target='_blank'>here</a>."; */
+        /*     $email_check_passed = false; */
+        /*   } */
+        /* } */
+
         if ($error == '') {
-          if (LookupImpressionWise($email) == false) {
-            $error = "Your e-mail address is invalid. Please try again. If you continue to have an issue, please contact us <a href='http://www.recipe4living.com/contact/' target='_blank'>here</a>.";
-            $email_check_passed = false;
+          $check_current_subscriber = "SELECT * FROM joinEmailActive WHERE email=\"$email\" LIMIT 1";
+          $check_current_subscriber_result = mysql_query($check_current_subscriber);
+          // only do impressionwise check if user not already subscribed
+          // to anything
+          if (mysql_num_rows($check_current_subscriber_result) == 0) {
+            if (LookupImpressionWise($email) == false) {
+              echo 'here';
+              $error = "Your e-mail address is invalid. Please try again. If you continue to have an issue, please contact us <a href='http://www.recipe4living.com/contact/' target='_blank'>here</a>.";
+              $email_check_passed = false;
+            }
           }
         }
 
