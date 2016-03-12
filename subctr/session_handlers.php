@@ -1,7 +1,7 @@
 <?php
 
-if (file_exists('./config.local.php')) {
-  include_once './config.local.php';
+if (file_exists("{$_SERVER['DOCUMENT_ROOT']}/subctr/config.local.php")) {
+  include_once "{$_SERVER['DOCUMENT_ROOT']}/subctr/config.local.php";
 }
 
 ini_set('session.save_handler','user');

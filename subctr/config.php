@@ -5,11 +5,12 @@ while (list($key,$val) = each($_POST)) { $$key = $val; }
 while (list($key,$val) = each($_GET)) { $$key = $val; }
 */
 
-if (file_exists('./config.local.php')) {
-  include_once './config.local.php';
-}
-
+$document_root = $_SERVER['DOCUMENT_ROOT'];
 $http_host = trim( $_SERVER['HTTP_HOST'] );
+
+if (file_exists("$document_root/subctr/config.local.php")) {
+  include_once "$document_root/subctr/config.local.php";
+}
 
 if ( strpos( $http_host, 'stage' ) === 0 ) {
   $debug = true;
