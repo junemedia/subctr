@@ -17,6 +17,11 @@ $maropostMap = array(
     'id' => 38352,
     'name' => 'Quick And Easy Eats'
   ),
+  // Budget Cooking (defunct)
+  395 => array(
+    'id' => 38352,
+    'name' => 'Quick And Easy Eats'
+  ),
   // Recipe4Living Special Offers
   396 => array(
     'id' => 38345,
@@ -89,6 +94,11 @@ $maropostMap = array(
   558 => array(
     'id' => 38343,
     'name' => 'WIM Special Offers'
+  ),
+  // Diabetic-Friendly Dishes (defunct)
+  '574' => array(
+    'id' => 38344,
+    'name' => 'R4L Daily Recipes'
   ),
   // The Feed by SavvyFork
   583 => array(
