@@ -5,6 +5,10 @@ while (list($key,$val) = each($_POST)) { $$key = $val; }
 while (list($key,$val) = each($_GET)) { $$key = $val; }
 */
 
+if (file_exists('./config.local.php')) {
+  include_once './config.local.php';
+}
+
 $http_host = trim( $_SERVER['HTTP_HOST'] );
 
 if ( strpos( $http_host, 'stage' ) === 0 ) {
@@ -84,9 +88,8 @@ $feed_back_loop_report = "samirp@junemedia.com,leonz@junemedia.com,hillarym@june
 $bounce_out_report = "samirp@junemedia.com,leonz@junemedia.com,hillarym@junemedia.com";
 
 
-//mysql_pconnect ("8ec3cdb8845732ea5bbc2a32fa2a87d52453102e.rackspaceclouddb.com", "jingshi", "kendeji12306!");
-mysql_pconnect ("a525a02442eb32ce6698509dc480168c11ae2a4f.rackspaceclouddb.com", "nibbles_stage", "gSMrxr94NY6Kox}");
-mysql_select_db ("arcamax_stage");
+mysql_pconnect (DB_HOST, DB_USERNAME, DB_PASSWORD);
+mysql_select_db (DB_NAME);
 
 
 // if user is listed in banned table, exit.

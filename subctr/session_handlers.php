@@ -1,5 +1,9 @@
 <?php
 
+if (file_exists('./config.local.php')) {
+  include_once './config.local.php';
+}
+
 ini_set('session.save_handler','user');
 ini_set('session.gc_maxlifetime','3600');
 
@@ -10,13 +14,14 @@ function getMicroTime() {
 
 //the database connection
 //$hostName = "8ec3cdb8845732ea5bbc2a32fa2a87d52453102e.rackspaceclouddb.com";
-$hostName = "a525a02442eb32ce6698509dc480168c11ae2a4f.rackspaceclouddb.com";
 //$username = 'jingshi';
-$username = 'nibbles_stage';
 //$password = 'kendeji12306!';
-$password = 'gSMrxr94NY6Kox}';
 //$dbname = 'arcamax';
-$dbname = 'arcamax_stage';
+
+$hostName = DB_HOST;
+$username = DB_USERNAME;
+$password = DB_PASSWORD;
+$dbname = DB_NAME;
 
 
 $connection = NULL;
