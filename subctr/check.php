@@ -658,7 +658,7 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
 
         <?php
           // this will never be true anymore...see getBounceCountFromArcamax()
-          if (ctype_digit($_SESSION['bouncecount']) && $_SESSION['bouncecount'] >= 20) {
+          if (isset($_SESSION['bouncecount']) && ctype_digit($_SESSION['bouncecount']) && $_SESSION['bouncecount'] >= 20) {
             echo "<font color='red'>Note: You may not be receiving your newsletters because we currently show that your e-mail address has bounced out due to delivery problems with your domain. <b>If you would like to restore your subscription, <a href='reset.php'>click here</a></b>.</font><br><br>";
           }
           if (isset($_SESSION['BounceCountReset']) && $_SESSION['BounceCountReset'] == true) {
