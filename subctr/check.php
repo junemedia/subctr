@@ -1,7 +1,6 @@
 <?php
 
 include_once('session_handlers.php');
-include 'maropostMap.php';
 
 
 if (!(isset($_POST['PHPSESSID'])) && !(isset($_GET['PHPSESSID']))) {

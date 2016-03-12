@@ -3,6 +3,8 @@
 define('MP_API_KEY', 'c300eeefb54ee6e746260585befa15a10a947a86');
 define('MP_ACCOUNT_ID', 694);
 
+include_once 'maropostMap.php';
+
 function sortSubscriptions($list_subscriptions) {
   // it's possible, I think, that an actual null value may be getting
   // passed in here theoretically, so be careful about just setting
