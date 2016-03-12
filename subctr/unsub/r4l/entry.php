@@ -3,7 +3,7 @@
 include_once("../../config.php");
 
 $pixel = "";
-if ($_POST['submit'] == 'Submit') {
+if (isset($_POST['submit']) && $_POST['submit'] == 'Submit') {
 	$email = trim($_REQUEST['email']);
         //$email = "";
 	$jobid = trim($_REQUEST['jobid']);
@@ -11,11 +11,11 @@ if ($_POST['submit'] == 'Submit') {
 	$listid = trim($_REQUEST['listid']);
 	
 	if ($_REQUEST['action_stay'] == 'Y') {
-		header("Location:http://r4l.popularliving.com/subctr/unsub/r4l/stay.php?listid=$listid&jobid=$jobid&email=$email");
+		header("Location:/subctr/unsub/r4l/stay.php?listid=$listid&jobid=$jobid&email=$email");
 		exit;
 	}
 	if ($_REQUEST['action_unsub'] == 'Y') {
-		header("Location:http://r4l.popularliving.com/subctr/unsub/r4l/unsub.php?listid=$listid&jobid=$jobid&email=$email");
+		header("Location:/subctr/unsub/r4l/unsub.php?listid=$listid&jobid=$jobid&email=$email");
 		exit;
 	}
 } else {
