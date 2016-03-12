@@ -255,7 +255,7 @@ if ($host == 'br') { $loader_img = 'br_loader.gif'; }
       <tr>
         <td>Email:</td>
         <td>
-          <input type="text" name="email" value="<?php echo $_SESSION["email"]; ?>" maxlength="100" size="30">
+          <input type="text" name="email" value="<?php echo @$_SESSION["email"]; ?>" maxlength="100" size="30">
         </td>
       </tr>
 
