@@ -52,7 +52,7 @@ switch ($listid) {
 		$newsletter_name = 'Diabetic-Friendly Dishes';
 		break;
 	case '502':
-		$newsletter_name = 'R4L Seasonal';
+		$newsletter_name = 'Recipe4Living Daily Recipes';
 		break;
 	case '507':
 		$newsletter_name = 'Recipe4Living Giveaways';

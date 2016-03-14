@@ -44,7 +44,11 @@ $maropostMap = array(
     'name' => 'FF Diet Insider'
   ),
 
-
+  // Editors Choice (email link)
+  502 => array(
+    'id' => 38344,
+    'name' => 'R4L Daily Recipes'
+  ),
   // BetterRecipesDaily
   504 => array(
     'id' => 38298,
