@@ -50,8 +50,6 @@ function isSubscribed($list_id, $signup_array, $sorted_subs) {
   return false;
 }
 
-// todo: I think this could actually happen in contactSubscribe by
-// including the email address there
 function addContact($email) {
   $api_key = MP_API_KEY;
   $api_root = 'http://api.maropost.com/accounts/' . MP_ACCOUNT_ID;

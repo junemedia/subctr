@@ -137,7 +137,7 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
         // if contact doesn't already exist, add them to maropost
         if ($contact['id'] == 0) {
           // get the Maropost data for the contact
-          list( $contact, $mp_sorted_subs ) = getContact($_SESSION['email']);
+          list( $contact, $mp_sorted_subs ) = addContact($_SESSION['email']);
         }
 
         contactSubscribe($contact, $mapped_id);
