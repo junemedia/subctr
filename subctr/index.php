@@ -92,7 +92,6 @@ if (isset($_POST['submit']) &&
           // to anything
           if (mysql_num_rows($check_current_subscriber_result) == 0) {
             if (LookupImpressionWise($email) == false) {
-              echo 'here';
               $error = "Your e-mail address is invalid. Please try again. If you continue to have an issue, please contact us <a href='http://www.recipe4living.com/contact/' target='_blank'>here</a>.";
               $email_check_passed = false;
             }
