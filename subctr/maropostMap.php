@@ -44,6 +44,7 @@ $maropostMap = array(
     'name' => 'FF Diet Insider'
   ),
 
+  // R4L Seasonal
   // Editors Choice (email link)
   502 => array(
     'id' => 38344,
