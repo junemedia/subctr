@@ -1,7 +1,19 @@
 <?php
 
+/*
+ * Originally run from /home/spatel/scripts/
+ *
+ * Pre-Maropost, this script ran every five minutes
+ * It grabs all the unprocessed sub/unsubs from the database and
+ * pushes the data to Campaigner via their API
+ *
+ * No longer necessary
+ *
+ */
+
+
 mysql_pconnect ('host', 'username', 'password');
-mysql_select_db ("arcamax");
+mysql_select_db ('arcamax');
 
 include_once("/var/www/html/subctr.popularliving.com/subctr/functions.php");
 
