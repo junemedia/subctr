@@ -81,7 +81,7 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Submit') {
 
         // insert into campaigner
         $campaigner = "INSERT IGNORE INTO campaigner (dateTime,email,ipaddr,oldListId,newListId,subcampid,source,subsource,type,isProcessed)
-                VALUES (NOW(),\"$email\",\"$user_ip\",\"$listid\",\"$new_listid\",\"$subcampid\",\"R4LUnsubLink\",\"\",'unsub','N')";
+                VALUES (NOW(),\"$email\",\"$user_ip\",\"$listid\",\"$new_listid\",\"$subcampid\",\"R4LUnsubLink\",\"\",'unsub','Y')";
         $campaigner_result = mysql_query($campaigner);
         echo mysql_error();
       }

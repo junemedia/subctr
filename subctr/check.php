@@ -136,15 +136,13 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
 
         // if contact doesn't already exist, add them to maropost
         if ($contact['id'] == 0) {
-          // get the Maropost data for the contact
+          // add the contact and update our contact data
           list( $contact, $mp_sorted_subs ) = addContact($_SESSION['email']);
         }
 
         contactSubscribe($contact, $mapped_id);
       }
-      else {
-        //echo 'already subbed to '.$mapped_id.' '.$mp_sorted_subs['subscribed'][$mapped_id].'<br>';
-      }
+
       // clear $mapped_id
       $mapped_id = 0;
     }
@@ -195,15 +193,15 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
       $new_listid = LookupNewListIdByOldListId($checked);
 
       // insert into `campaigner`
+      // not sure there's any reason to do this anymore, but leaving
+      // for now--in case something else relies on these records-- and
+      // marking as processed
       $campaigner = "INSERT IGNORE INTO campaigner (dateTime,email,ipaddr,oldListId,newListId,subcampid,source,subsource,type,isProcessed)
-              VALUES (NOW(),\"$email\",\"$user_ip\",\"$checked\",\"$new_listid\",\"$subcampid\",\"$source\",\"$subsource\",'sub','N')";
+              VALUES (NOW(),\"$email\",\"$user_ip\",\"$checked\",\"$new_listid\",\"$subcampid\",\"$source\",\"$subsource\",'sub','Y')";
       $campaigner_result = mysql_query($campaigner);
       echo mysql_error();
 
       $_SESSION['bouncecount'] = 0; // sub/unsub requests must reset bounce count to zero
-    }
-    else {
-      // since this user already in our system, simply do nothing and continue
     }
   }
 
@@ -285,16 +283,13 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
 
 
     /************************ do Maropost un-subs *************************/
+    // not checking if it's a new contact since it doesn't matter here
     if (isset($maropostMap[$not_checked])) {
       $mapped_id = $maropostMap[$not_checked]['id'];
 
       if (isset($mp_sorted_subs['subscribed'][$mapped_id])) {
         contactUnsubscribe($contact, $mapped_id);
       }
-      else {
-        //echo 'not subbed to '.$mapped_id.' '.$mp_sorted_subs['subscribed'][$mapped_id].'<br>';
-      }
-
     }
 
 
@@ -343,7 +338,7 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Update Information') {
 
       // insert into `campaigner`
       $campaigner = "INSERT IGNORE INTO campaigner (dateTime,email,ipaddr,oldListId,newListId,subcampid,source,subsource,type,isProcessed)
-              VALUES (NOW(),\"$email\",\"$user_ip\",\"$not_checked\",\"$new_listid\",\"$subcampid\",\"$source\",\"$subsource\",'unsub','N')";
+              VALUES (NOW(),\"$email\",\"$user_ip\",\"$not_checked\",\"$new_listid\",\"$subcampid\",\"$source\",\"$subsource\",'unsub','Y')";
       $campaigner_result = mysql_query($campaigner);
       echo mysql_error();
 
