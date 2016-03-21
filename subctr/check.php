@@ -563,7 +563,8 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
   $main_newsletter_listing = str_replace("[CHECKBOX_$xx]", "<input type='checkbox' value='$active_nl_row->listid' name='aJoinListId[]' $checked>", $main_newsletter_listing);
   $main_newsletter_listing = str_replace("[MESSAGE_$xx]",  "<div id='$active_nl_row->listid'></div>", $main_newsletter_listing);
   $main_newsletter_listing = str_replace("[IMAGE_URL_$xx]", $active_nl_row->logo, $main_newsletter_listing);
-  $main_newsletter_listing = str_replace("[TITLE_$xx]", $active_nl_row->title, $main_newsletter_listing);
+  //$main_newsletter_listing = str_replace("[TITLE_$xx]", $active_nl_row->title, $main_newsletter_listing);
+  $main_newsletter_listing = str_replace("[TITLE_$xx]", $maropostMap[$active_nl_row->listid]['name'], $main_newsletter_listing);
   $main_newsletter_listing = str_replace("[FREQUENCY_$xx]", $active_nl_row->frequency, $main_newsletter_listing);
   $main_newsletter_listing = str_replace("[DESCRIPTION_$xx]", $active_nl_row->description, $main_newsletter_listing);
 }
@@ -587,7 +588,8 @@ while ($active_nl_row = mysql_fetch_object($active_nl_result)) {
   $more_newsletter_listing = str_replace("[CHECKBOX_$xx]", "<input type='checkbox' value='$active_nl_row->listid' name='aJoinListId[]' $checked>", $more_newsletter_listing);
   $more_newsletter_listing = str_replace("[MESSAGE_$xx]", "<div id='$active_nl_row->listid'></div>", $more_newsletter_listing);
   $more_newsletter_listing = str_replace("[IMAGE_URL_$xx]", $active_nl_row->logo, $more_newsletter_listing);
-  $more_newsletter_listing = str_replace("[TITLE_$xx]", $active_nl_row->title, $more_newsletter_listing);
+  //$more_newsletter_listing = str_replace("[TITLE_$xx]", $active_nl_row->title, $more_newsletter_listing);
+  $more_newsletter_listing = str_replace("[TITLE_$xx]", $maropostMap[$active_nl_row->listid]['name'], $more_newsletter_listing);
   $more_newsletter_listing = str_replace("[FREQUENCY_$xx]", $active_nl_row->frequency, $more_newsletter_listing);
   $more_newsletter_listing = str_replace("[DESCRIPTION_$xx]", $active_nl_row->description, $more_newsletter_listing);
 }

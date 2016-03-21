@@ -4,12 +4,12 @@ $maropostMap = array(
   // Daily Recipes
   393 => array(
     'id' => 41157,
-    'name' => 'R4L Daily Recipes'
+    'name' => 'Recipe4Living Daily Recipes'
   ),
   // Quick & Easy Recipes
   394 => array(
     'id' => 41148,
-    'name' => 'Quick And Easy Eats'
+    'name' => 'Quick & Easy Eats'
   ),
   // Budget Cooking (defunct)
   395 => array(
@@ -19,45 +19,45 @@ $maropostMap = array(
   // Recipe4Living Special Offers
   396 => array(
     'id' => 41158,
-    'name' => 'R4L Special Offers'
+    'name' => 'Recipe4Living Special Offers'
   ),
 
   // Fit&Fab Living Special Offers
   410 => array(
     'id' => 41106,
-    'name' => 'FF Special Offers'
+    'name' => 'Fit&Fab Special Offers'
   ),
   // Daily Insider
   411 => array(
     'id' => 41102,
-    'name' => 'FF Daily Insider'
+    'name' => 'Fit&Fab Daily Insider'
   ),
   // Diet Insider
   448 => array(
     'id' => 41084,
-    'name' => 'FF Diet Insider'
+    'name' => 'Fit&Fab Diet Insider'
   ),
 
   // R4L Seasonal
   // Editors Choice (email link)
   502 => array(
     'id' => 41157,
-    'name' => 'R4L Daily Recipes'
+    'name' => 'Recipe4Living Daily Recipes'
   ),
   // BetterRecipesDaily
   504 => array(
     'id' => 41136,
-    'name' => 'Better Recipes Daily Recipes'
+    'name' => 'BetterRecipes Daily Recipes'
   ),
   // BetterRecipesSOLO
   505 => array(
     'id' => 41140,
-    'name' => 'Better Recipes Special Offers'
+    'name' => 'BetterRecipes Special Offers'
   ),
   // IsBetterRecipesSweeps
   506 => array(
     'id' => 41154,
-    'name' => 'Better Recipes Sweeps'
+    'name' => 'BetterRecipes Sweeps'
   ),
   // IsRecipe4LivingSweeps
   507 => array(
@@ -82,7 +82,7 @@ $maropostMap = array(
   // Making It Work
   553 => array(
     'id' => 41111,
-    'name' => 'WIM '
+    'name' => 'Making It Work'
   ),
   // Copycat Classics
   554 => array(
@@ -92,16 +92,16 @@ $maropostMap = array(
   // Work It, Mom! Special Offers
   558 => array(
     'id' => 41113,
-    'name' => 'WIM Special Offers'
+    'name' => 'Work It, Mom! Special Offers'
   ),
   // Diabetic-Friendly Dishes (defunct)
   574 => array(
     'id' => 41157,
-    'name' => 'R4L Daily Recipes'
+    'name' => 'Recipe4Living Daily Recipes'
   ),
   // The Feed by SavvyFork
   583 => array(
     'id' => 41109,
-    'name' => 'Savvy Fork The Feed'
+    'name' => 'The Feed by Savvy Fork'
   )
 );
