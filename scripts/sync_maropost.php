@@ -8,15 +8,15 @@
  *
  */
 
+require_once '/var/www/html/subctr.popularliving.com/subctr/config.local.php';
+include_once '/var/www/html/subctr.popularliving.com/subctr/functions.php';
+include_once '/var/www/html/subctr.popularliving.com/subctr/maropostFunctions.php';
+
 $now = time();
 
 date_default_timezone_set('UTC');
 $output = date('D M j G:i:s T Y') . "\n";
 $output .= "Start...\n\n";
-
-require_once '/var/www/html/subctr.popularliving.com/subctr/config.local.php';
-include_once '/var/www/html/subctr.popularliving.com/subctr/functions.php';
-include_once '/var/www/html/subctr.popularliving.com/subctr/maropostFunctions.php';
 
 mysql_connect (DB_HOST, DB_USERNAME, DB_PASSWORD);
 mysql_select_db (DB_NAME);
