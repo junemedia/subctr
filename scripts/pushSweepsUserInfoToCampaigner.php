@@ -166,7 +166,7 @@ date_default_timezone_set('America/Chicago');
 $email = "williamg@junemedia.com";
 //$email = "";
 // Send the mail notification
-$to      = $email . ',leonz@junemedia.com,howew@junemedia.com';
+$to      = $email . ',johns@junemedia.com';
 $subject = 'Daily Report - Push Sweeps Register Users Into Campaigner';
 $failedMsg = $failedTotal>0?"Failed Emails:\r\n".implode(",", $failedEmails)."\r\n":"";
 

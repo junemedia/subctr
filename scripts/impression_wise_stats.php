@@ -53,6 +53,6 @@ $sHeaders  = "MIME-Version: 1.0\r\n";
 $sHeaders .= "Content-type: text/html; charset=iso-8859-1\r\n";
 $sHeaders .= "From:admin@myfree.com\r\n";
 
-mail('williamg@junemedia.com',"Real-Time Impression Wise Lookup Stats - $yesterday",$report,$sHeaders);
+mail('johns@junemedia.com',"Real-Time Impression Wise Lookup Stats - $yesterday",$report,$sHeaders);
 
 ?>
