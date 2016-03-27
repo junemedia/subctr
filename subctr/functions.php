@@ -714,3 +714,21 @@ function getAttrNameByListId($listId){
 }
 
 
+if (!function_exists('tryMail')) {
+  function tryMail($to, $subject, $message, $headers, $times = 3) {
+    for ($i=0; $i<$times; $i++) {
+      if (mail($to, $subject, $message, $headers)) {
+        // Sending mail success, exit
+        break;
+      }
+      else {
+        $body = $to . "\n------------------\n" .
+                $subject . "\n------------------\n" .
+                $message . "\n------------------\n" .
+                $headers;
+        mail('johns@junemedia.com', 'Mail Error', $body);
+      }
+    }
+  }
+}
+

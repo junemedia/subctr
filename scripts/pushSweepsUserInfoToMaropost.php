@@ -1,29 +1,47 @@
 <?php
-include_once("config.php");
+
+require_once '/var/www/html/subctr.popularliving.com/subctr/config.local.php';
+require_once '/var/www/html/subctr.popularliving.com/subctr/functions.php';
+require_once '/var/www/html/subctr.popularliving.com/subctr/maropostFunctions.php';
+
+mysql_connect (DB_HOST, DB_USERNAME, DB_PASSWORD);
+mysql_select_db (DB_NAME);
+
+/*
+ * get all signups in last 24 hours
+ */
 
 $endTime = time();
 $startTime = $endTime - (24 * 60 * 60);
-$link = 'http://win.betterrecipes.com/api/syncUser/' . $startTime . '/' . $endTime;
+$link = "http://win.betterrecipes.com/api/syncUser/$startTime/$endTime";
 
-echo "-->Start to download from $link ... ";
+date_default_timezone_set('UTC');
+$output = date('D M j G:i:s T Y') . "\n";
+
+$output .= "-->Start to download from $link ... ";
 
 $receive = file_get_contents($link);
 $items = json_decode($receive);
-echo "Done\n";
+$output .= "Done\n";
 
 $totalRows = count($items);
-echo "-->total [$totalRows] \n";
+$output .= "-->total [$totalRows] \n\n";
 
 $total = 0;
 $successTotal = 0;
 $failedTotal = 0;
 $failedEmails = '';
 
+
 if (!empty($items)) {
   foreach ($items as $item) {
     $email = $item->email;
 
-    echo "-->Processing $email ... ";
+    // get contact data from Maropost if it exists
+    list( $contact, $mp_sorted_subs ) = getContact($email);
+
+    $output .= "--------------------\n";
+    $output .= "-->Processing $email ...\n";
 
     $subcampid = '';
     $save_subcampid = '';
@@ -45,6 +63,7 @@ if (!empty($items)) {
     $sub_array = array();
     $unsub_array = array();
 
+    // site_id 1: Better Recipes
     if ($item->site_id == 1) {
       $fromSite = 'BR';
       $subcampid = 4377; //Sweeps Registration BR 0615
@@ -53,9 +72,12 @@ if (!empty($items)) {
       $old_listid = 506; //506:old list id for br sweeps
 
       // For logs only
-      $parts = array(506, 504, 505);
+      $parts = array(504, 505, 506);
+      // BetterRecipes Sweeps, BR Daily & BR Special Offers
+      $sub_array = array(41154, 41136, 41140);
     }
 
+    // site_id 2: Recipe4Living
     if ($item->site_id == 2) {
       $fromSite = 'R4L';
       $subcampid = 4378 ; //Sweeps Registration R4L 0615
@@ -65,20 +87,11 @@ if (!empty($items)) {
       //$source = getSubcampIdDescriptiveName($subcampid);
 
       // For logs only
-      $parts = array(507, 393, 396, 501, 502, 503);
+      $parts = array(393, 396, 507);
+      // Recipe4Living Sweeps, R4L Daily, R4L Special Offers
+      $sub_array = array(41141, 41157, 41158);
     }
-    echo " $fromSite ... ";
-
-    // We don't have unsub here, ok?
-    if ($old_listid == 506) {
-      // IsBetterRecipesSweeps, then add IsBetterRecipesDaily IsBetterRecipesSOLO
-      $sub_array = array(4362328, 4240263, 4240273);
-    }
-
-    if ($old_listid == 507){
-      // IsRecipe4LivingSweeps, then add IsDailyRecipes IsRecipe4LivingSOLO IsEditorsChoice IsR4LSeasonal IsMoreWeLove
-      $sub_array = array(4362338, 3844883, 3844873, 4195798, 4195808, 4195818);
-    }
+    $output .= " $fromSite ...\n";
 
     // Log Start --------------------------------------
     // Alright, just like what we did before, save them all in the logs
@@ -101,7 +114,7 @@ if (!empty($items)) {
                        )";
 
       $insert_query_result = mysql_query($insert_query);
-      echo mysql_error();
+      echo mysql_error() . "\n";
 
       $insert_query = "INSERT IGNORE INTO joinEmailActive (
                          dateTime,
@@ -120,10 +133,42 @@ if (!empty($items)) {
                          '$source'
                        )";
       $insert_query_result = mysql_query($insert_query);
-      echo mysql_error();
+      echo mysql_error() . "\n";
+
+
+      /*
+       * Send sub info to Maropost
+       */
+
+      // get Maropost list id
+      $mapped_id = $maropostMap[$list_parts]['id'];
+
+      if (!isset($mp_sorted_subs['subscribed'][$mapped_id])) {
+        print_r($contact);
+        // if contact doesn't already exist, add them to maropost
+        if ($contact['id'] == 0) {
+          $output .= "    ** new contact **\n";
+          // add the contact and update our contact data
+          list( $contact, $mp_sorted_subs ) = addContact($email);
+        }
+
+        $output .= "    subscribe to $mapped_id\n";
+        $subscribeCallResult = contactSubscribe($contact, $mapped_id);
+      }
+      else {
+        $output .= "    already subscribed to $mapped_id\n";
+      } 
+
+      // clear $mapped_id
+      $mapped_id = 0;
     }
 
     // Log End ---------------------------------
+
+
+
+
+
 
     //Check if the email is already in campaigner
     $query = "SELECT l.3818568 as email, l.3834288 as subcampid
@@ -131,7 +176,7 @@ if (!empty($items)) {
               WHERE l.3818568 = '".$email."'
               LIMIT 1";
     $result2 = mysql_query($query);
-    echo mysql_error();
+    echo mysql_error() . "\n";
 
     $row = mysql_fetch_object($result2);
     if (!empty($row)) {
@@ -170,8 +215,9 @@ if (!empty($items)) {
       'alreadyExist' => $alreadyExist
     );
 
-    $send_result = sendSweepsToCampaigner($data_array);
-    $result_code = trim(getXmlValueByTag($send_result,'ResultCode'));
+    $send_result = json_encode(@$subscribeCallResult);
+    //$result_code = trim(getXmlValueByTag($send_result,'ResultCode'));
+    $result_code = 'success';
     $send_result = addslashes($send_result);
     if (strtolower($result_code) != 'success') {
       $failedEmails[] = $email."(".$result_code.")\r\n";
@@ -195,7 +241,8 @@ if (!empty($items)) {
                      reponse,
                      link
                    )
-                   VALUES (NOW(),
+                   VALUES (
+                     NOW(),
                      '$email',
                      '$ipaddr',
                      '$old_listid',
@@ -208,7 +255,8 @@ if (!empty($items)) {
                      '$link'
                    )";
     $sweeps_log_result = mysql_query($sweeps_log);
-    echo mysql_error();
+
+    echo mysql_error() . "\n";
     echo "$result_code\n";
   }
 }
@@ -216,8 +264,8 @@ if (!empty($items)) {
 $total = $successTotal + $failedTotal;
 
 // Send out results mail
-date_default_timezone_set('America/Chicago');
-$email = "williamg@junemedia.com";
+date_default_timezone_set('UTC');
+$email = "johns@junemedia.com";
 
 // Send the mail notification
 $to      = $email . ',johns@junemedia.com';
@@ -233,3 +281,8 @@ $headers = 'From: Pushing Sweeps <johns@junemedia.com>' . "\r\n" .
            'X-Mailer: PHP/' . phpversion();
 
 tryMail($to, $subject, $message, $headers);
+
+$output .= "\n\n************************************************************************\n\n";
+
+$logfile = __DIR__ . '/logs/pushSweepsUserInfoToCampaigner-' . date('Ymd') . '.log';
+file_put_contents($logfile, $output, FILE_APPEND);
