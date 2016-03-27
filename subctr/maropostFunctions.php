@@ -164,7 +164,7 @@ function getContact($contactEmail) {
     'Content-Type: application/json'
   );
 
-  $api_endpoint = "contacts/email.json?contact[email]=$contactEmail";
+  $api_endpoint = 'contacts/email.json?contact[email]=' . urlencode($contactEmail);
 
   $ch = curl_init("$api_root/$api_endpoint&auth_token=$api_key");
   curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
