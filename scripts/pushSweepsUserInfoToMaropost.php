@@ -144,7 +144,6 @@ if (!empty($items)) {
       $mapped_id = $maropostMap[$list_parts]['id'];
 
       if (!isset($mp_sorted_subs['subscribed'][$mapped_id])) {
-        print_r($contact);
         // if contact doesn't already exist, add them to maropost
         if ($contact['id'] == 0) {
           $output .= "    ** new contact **\n";
@@ -284,5 +283,5 @@ tryMail($to, $subject, $message, $headers);
 
 $output .= "\n\n************************************************************************\n\n";
 
-$logfile = __DIR__ . '/logs/pushSweepsUserInfoToCampaigner-' . date('Ymd') . '.log';
+$logfile = __DIR__ . '/logs/pushSweepsUserInfoToMaropost-' . date('Ym') . '.log';
 file_put_contents($logfile, $output, FILE_APPEND);
