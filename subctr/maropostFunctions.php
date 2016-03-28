@@ -50,7 +50,7 @@ function isSubscribed($list_id, $signup_array, $sorted_subs) {
   return false;
 }
 
-function addContact($email) {
+function addContact($email, $data=array()) {
   $api_key = MP_API_KEY;
   $api_root = 'http://api.maropost.com/accounts/' . MP_ACCOUNT_ID;
   $api_headers = array(
@@ -65,6 +65,12 @@ function addContact($email) {
       'email' => $email
     )
   );
+  // make sure $data is an aray
+  if (is_array($data)) {
+    foreach ($data as $key => $value) {
+      $payload[$key] = $value;
+    }
+  }
   $json = json_encode($payload);
 
   $ch = curl_init("$api_root/$api_endpoint?auth_token=$api_key");
