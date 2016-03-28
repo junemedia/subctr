@@ -37,11 +37,11 @@ if (!empty($items)) {
   foreach ($items as $item) {
     $email = $item->email;
 
-    // get contact data from Maropost if it exists
-    list( $contact, $mp_sorted_subs ) = getContact($email);
 
     $output .= "--------------------\n";
     $output .= "-->Processing $email ...\n";
+
+
 
     $subcampid = '';
     $save_subcampid = '';
@@ -59,6 +59,29 @@ if (!empty($items)) {
     $state = $item->state;
     $signup_date = $item->date_registered;
     $alreadyExist = false;
+
+    // get contact data from Maropost if it exists
+    list( $contact, $mp_sorted_subs ) = getContact($email);
+    if (!isset($contact['id']) || $contact['id'] === 0) {
+      $contact_data = array(
+        'first_name' =>  $firstName,
+        'last_name' => $lastName
+      );
+      list($contact, $mp_sorted_subs) = addContact($email, $contact_data);
+
+      /*
+       * need to handle responses like:
+       *
+       *     {"email":["address is marked as a spam trap"]}
+       */
+
+      if (is_array($contact['email'])) {
+        $output .= "\n" . print_r($contact['email'], true) . "\n";
+        $output .= "skipping...\n";
+        continue;
+      }
+    }
+
 
     $sub_array = array();
     $unsub_array = array();
@@ -163,9 +186,6 @@ if (!empty($items)) {
     }
 
     // Log End ---------------------------------
-
-
-
 
 
 
