@@ -27,10 +27,11 @@ $output .= "Done\n";
 $totalRows = count($items);
 $output .= "-->total [$totalRows] \n\n";
 
-$total = 0;
-$successTotal = 0;
-$failedTotal = 0;
-$failedEmails = '';
+$processed = array(
+  'updated' => array(),
+  'added' => array(),
+  'rejected' => array()
+);
 
 
 if (!empty($items)) {
@@ -62,6 +63,7 @@ if (!empty($items)) {
 
     // get contact data from Maropost if it exists
     list( $contact, $mp_sorted_subs ) = getContact($email);
+    // new contact
     if (!isset($contact['id']) || $contact['id'] === 0) {
       $contact_data = array(
         'first_name' =>  $firstName,
@@ -78,8 +80,16 @@ if (!empty($items)) {
       if (is_array($contact['email'])) {
         $output .= "\n" . print_r($contact['email'], true) . "\n";
         $output .= "skipping...\n";
+
+        array_push($processed['rejected'], $email);
         continue;
       }
+      else {
+        array_push($processed['added'], $email);
+      }
+    }
+    else {
+      array_push($processed['updated'], $email);
     }
 
 
@@ -179,7 +189,7 @@ if (!empty($items)) {
       }
       else {
         $output .= "    already subscribed to $mapped_id\n";
-      } 
+      }
 
       // clear $mapped_id
       $mapped_id = 0;
@@ -238,13 +248,6 @@ if (!empty($items)) {
     //$result_code = trim(getXmlValueByTag($send_result,'ResultCode'));
     $result_code = 'success';
     $send_result = addslashes($send_result);
-    if (strtolower($result_code) != 'success') {
-      $failedEmails[] = $email."(".$result_code.")\r\n";
-      $failedTotal++;
-    }
-    else {
-      $successTotal++;
-    }
 
     // insert into sweeps_log
     $sweeps_log = "INSERT IGNORE INTO sweeps_user_boolean_log (
@@ -280,24 +283,28 @@ if (!empty($items)) {
   }
 }
 
-$total = $successTotal + $failedTotal;
+$updatedCount  = count($processed['updated']);
+$addedCount    = count($processed['added']);
+$rejectedCount = count($processed['rejected']);
+$totalCount    = $updatedCount + $addedCount + $rejectedCount;
 
 // Send out results mail
 date_default_timezone_set('UTC');
 $email = "johns@junemedia.com";
 
 // Send the mail notification
-$to      = $email . ',johns@junemedia.com';
-$subject = 'Daily Report - Push Sweeps Register Users Into Campaigner';
-$failedMsg = $failedTotal > 0 ? "Failed Emails:\r\n".implode(",", $failedEmails)."\r\n" : "";
-
-$message = "Done! Total Upload [$total] emails.\r\n" .
-           "Successed: $successTotal emails.\r\n" .
-           "Failed: $failedTotal emails.\r\n".$failedMsg;
+$to      = $email;
+$subject = 'Daily Report - Push Sweeps registrations to Maropost';
 
 $headers = 'From: Pushing Sweeps <johns@junemedia.com>' . "\r\n" .
            'Reply-To: Pushing Sweeps <johns@junemedia.com>' . "\r\n" .
            'X-Mailer: PHP/' . phpversion();
+
+$message = "Done! Total Upload [$totalCount] emails.\r\n" .
+           "----------------------------------------\r\n" .
+           "Added:    $addedCount\r\n" .
+           "Updated:  $updatedCount\r\n" .
+           "Rejected: $rejectedCount\r\n";
 
 tryMail($to, $subject, $message, $headers);
 
