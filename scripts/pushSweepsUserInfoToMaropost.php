@@ -283,6 +283,8 @@ if (!empty($items)) {
   }
 }
 
+$output .= "\n\n************************************************************************\n\n";
+
 $updatedCount  = count($processed['updated']);
 $addedCount    = count($processed['added']);
 $rejectedCount = count($processed['rejected']);
@@ -304,11 +306,10 @@ $message = "Done! Total Upload [$totalCount] emails.\r\n" .
            "----------------------------------------\r\n" .
            "Added:    $addedCount\r\n" .
            "Updated:  $updatedCount\r\n" .
-           "Rejected: $rejectedCount\r\n";
+           "Rejected: $rejectedCount\r\n\n" . $output;
 
 tryMail($to, $subject, $message, $headers);
 
-$output .= "\n\n************************************************************************\n\n";
 
 $logfile = __DIR__ . '/logs/pushSweepsUserInfoToMaropost-' . date('Ym') . '.log';
 file_put_contents($logfile, $output, FILE_APPEND);
