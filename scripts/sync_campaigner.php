@@ -1,124 +1,123 @@
 <?php
 
 /*
- * Originally run from /home/spatel/scripts/
+ * Grabs all the unprocessed sub/unsubs from the database and
+ * pushes the data to Maropost via their API
  *
- * Pre-Maropost, this script ran every five minutes
- * It grabs all the unprocessed sub/unsubs from the database and
- * pushes the data to Campaigner via their API
- *
- * No longer necessary
+ * No longer necessary -- eventually, hopefully
  *
  */
 
+require_once '/var/www/html/subctr.popularliving.com/subctr/config.local.php';
+include_once '/var/www/html/subctr.popularliving.com/subctr/functions.php';
+include_once '/var/www/html/subctr.popularliving.com/subctr/maropostFunctions.php';
 
-mysql_pconnect ('host', 'username', 'password');
-mysql_select_db ('arcamax');
+$now = time();
 
-include_once("/var/www/html/subctr.popularliving.com/subctr/functions.php");
+date_default_timezone_set('UTC');
+$output = date('D M j G:i:s T Y') . "\n";
+$output .= "Start...\n\n";
 
-$query = "SELECT * FROM campaigner WHERE isProcessed = 'N' ORDER BY dateTime ASC";
-$result = mysql_query($query);
+mysql_connect (DB_HOST, DB_USERNAME, DB_PASSWORD);
+mysql_select_db (DB_NAME);
+
+// get all the unprocessed entries in `campaigner`
+$sql = 'SELECT *
+        FROM `campaigner`
+        WHERE `isProcessed` = "N"
+        ORDER BY `id` DESC LIMIT 20';
+$queue = mysql_query($sql);
 echo mysql_error();
 
-while ($row = mysql_fetch_object($result)) {
-  $id = $row->id;
+$contacts = array();
+
+while ($row = mysql_fetch_object($queue)) {
   $email = $row->email;
-  $subcampid = $row->subcampid;
-  $signup_date = $row->dateTime;
-  $ipaddr = $row->ipaddr;
-  $new_listid = $row->newListId;
-  $source = getSubcampIdDescriptiveName($subcampid);
-  $subsource = $row->source;
   $type = $row->type;
+  $oldListId = $row->oldListId;
+  $listid = $maropostMap[$row->oldListId]['id'];
+  $rowid = $row->id;
 
-  $sub_array = array();
-  $unsub_array = array();
-
-  if ($type == 'sub') {
-    $sub_array = array($new_listid);
+  if (!isset($contacts[$email])) {
+    $contacts[$email] = array();
   }
-  else {
-    $unsub_array = array($new_listid);
-  }
+  $current = &$contacts[$email];
 
-  $data_array = array(
-    'email' => $email,
-    'first' => '',
-    'last' => '',
-    'phone' => '',
-    'fax' => '',
-    'status' => 'Subscribed',
-    'format' => 'Both',
-    'ipaddr' => $ipaddr,
-    'signup_date' => $signup_date,
-    'age_group' => '',
-    'oldlistid' => '',
-    'subcampid' => $subcampid,
-    'source' => $source,
-    'subsource' => $subsource,
-    'address1' => '',
-    'address2' => '',
-    'city' => '',
-    'state' => '',
-    'zipcode' => '',
-    'country' => 'US',
-    'gender' => '',
-    'birth_date' => '',
-    'contactId' => 0,
-    'sub_array' => $sub_array,
-    'unsub_array' => $unsub_array
-  );
-  $send_result = sendToCampaigner($data_array);
 
-  $result_code = trim(getXmlValueByTag($send_result, 'ResultCode'));
-  $contactId = trim(getXmlValueByTag($send_result, 'ContactId'));
-  $email = trim(getXmlValueByTag($send_result, 'ContactUniqueIdentifier'));
+  // if there's already a more recent action in this batch, skip this
+  if (!isset($current[$listid])) {
 
-  // Record ID and email only if it's success
-  if ($email != '' && ctype_digit($contactId) && $contactId != '') {
-    $campaignerContacts = "INSERT IGNORE INTO campaignerContacts (id, email)
-                           VALUES (\"$contactId\",\"$email\")";
-    $campaignerContacts_result = mysql_query($campaignerContacts);
+    /* check to see if there's an already processed action for this
+     * contact/list that is more recent than this request, don't want
+     * to overwrite more recent actions
+     */
+    $sql = "SELECT `id`
+            FROM `campaigner`
+            WHERE `email` = '$email'
+              AND `oldListId` = $oldListId
+              AND `isProcessed` = 'Y'
+              AND `id` > $rowid
+            ORDER BY `dateTime` DESC
+            LIMIT 1";
+    $result = mysql_query($sql);
     echo mysql_error();
+
+
+    while ($foo = mysql_fetch_array($result)) { $fooid = $foo['id']; }
+
+    $newerAction = (mysql_num_rows($result) !== 0);
+
+    // if nothing newer, add it to the list for syncing
+    if (!$newerAction) {
+      $current[$listid] = $type;
+    }
+    // else put it in list but mark as skip, this prevents us from
+    // making multiple db calls for the same contact/list
+    else {
+      $output .= " ** skip $rowid ($fooid)\n";
+      $current[$listid] = 'skip';
+    }
   }
 
-  $send_result = addslashes($send_result);
-
-  $update = "UPDATE campaigner
-             SET isProcessed='Y',
-                 response = \"$send_result\"
-             WHERE id='$id'";
+  $output .= "mark $rowid as processed\n";
+  $update = "UPDATE `campaigner`
+             SET `isProcessed` = 'Y'
+             WHERE `id` = '$rowid'";
   $update_result = mysql_query($update);
   echo mysql_error();
-
-  // Process the OpenX ads unit
-  // Add the openx ad sequence
-  $openx_ads_sequence = (int)($contactId);   //Open X Unique Sequence
-  $openx_ads_tag_1 = (int)($openx_ads_sequence . "1");  // Open X Ad Tag 1
-  $openx_ads_tag_2 = (int)($openx_ads_sequence . "2");  // Open X Ad Tag 2
-  $openx_ads_tag_3 = (int)($openx_ads_sequence . "3");  // Open X Ad Tag 3
-  $openx_ads_tag_4 = (int)($openx_ads_sequence . "4");  // Open X Ad Tag 4
-  $openx_ads_tag_5 = (int)($openx_ads_sequence . "5");  // Open X Ad Tag 5
-
-
-  $data_array = array(
-    'ContactId'=> $contactId,
-    'email' =>$email,
-    'first' => "",
-    'last' => "",
-    'phone' =>'',
-    'fax'=>'',
-    'status' => 'Subscribed',
-    'format' => 'Both',
-    'openx_ads_sequence' => $openx_ads_sequence,
-    'openx_ads_tag_1' => $openx_ads_tag_1,
-    'openx_ads_tag_2' => $openx_ads_tag_2,
-    'openx_ads_tag_3' => $openx_ads_tag_3,
-    'openx_ads_tag_4' => $openx_ads_tag_4,
-    'openx_ads_tag_5' => $openx_ads_tag_5
-  );
-  $send_result = updateCampaignerOpenX($data_array);
 }
 
-?>
+$output .= print_r($contacts, true);
+
+
+foreach ($contacts as $email => $actions) {
+  list($contact, $sortedSubs) = getContact($email);
+  $output .= "$email\n";
+
+  if ($contact['id'] == 0) {
+    $output .= "  **create new contact\n";
+    list($contact, $sortedSubs) = addContact($email);
+  }
+
+  foreach ($actions as $id => $action) {
+    switch ($action) {
+      case 'sub':
+        $output .= "    subscribe to $id\n";
+        contactSubscribe($contact, $id);
+        break;
+      case 'unsub':
+        $output .= "    unsub from $id\n";
+        contactUnsubscribe($contact, $id);
+        break;
+      default:
+        $output .= "    skip $id\n";
+    }
+  }
+}
+
+$output .= "\n\n...done!";
+$output .= "\n\n************************************************************************\n\n";
+
+
+$logfile = __DIR__ . '/logs/sync_maropost-' . date('Ymd') . '.log';
+file_put_contents($logfile, $output, FILE_APPEND);
