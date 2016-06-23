@@ -62,7 +62,10 @@ function addContact($email, $data=array()) {
 
   $payload = array(
     'contact' => array(
-      'email' => $email
+      'email' => $email,
+      'custom_field' => array(
+        'email_sha1' => sha1(strtolower($email))
+      )
     )
   );
   // make sure $data is an aray
