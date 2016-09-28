@@ -1,0 +1,15 @@
+body {
+  font-family: sans-serif;
+  width: 500px;
+  margin: 0 auto;
+}
+.message {
+  color: #e33;
+  font-size: 1.125em;
+}
+
+.message strong {
+  font-weight: bold;
+  font-style: italic;
+}
+
