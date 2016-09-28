@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+  <title>Unsubscribe From Recipe4Living Newsletters</title>
+  <link href="css/sf_unsub.css" rel="stylesheet">
+  <script src="js/sf_unsub.js"/></script>
+
+</head>
+
+<body>
+  <div class="message">
+    <p><strong>Wait - don't go!</strong>  Are you sure you want to be unsubscribed from <strong><?php echo $newsletter_name; ?></strong>?</p>
+  </div>
+
+  <p>Please check the box below to confirm your action.</p>
+
+  <form name="form1" method="POST" action="<?php echo $_SERVER['PHP_SELF']?>" onsubmit="return check_fields();">
+    <input type="hidden" name="jobid" value="<?php echo $jobid; ?>">
+    <input type="hidden" name="listid" value="<?php echo $listid; ?>">
+
+
+    <table>
+      <tr>
+        <td>
+          <input type="radio" name="action" id="action_stay" value="stay"><label for="action_stay">No, please keep me on the list!</label>
+          <br><br>
+          <input type="radio" name="action" id="action_unsub" value="unsub" checked><label for="action_unsub">Yes, please unsubscribe me from <i><b><?php echo $newsletter_name; ?></b></i>.
+        </td>
+      </tr>
+      <tr><td>&nbsp;</td></tr>
+
+      <?php if ($message != '') { ?>
+        <tr><td style="color:red;"><?php echo $message; ?></td></tr>
+        <tr><td>&nbsp;</td></tr>
+      <?php } ?>
+
+      <tr><td>Please confirm your email address:</td></tr>
+      <tr><td><input type="text" name="email" id="email" value="<?php echo $email; ?>" size="50" maxlength="200"></td></tr>
+      <tr><td>&nbsp;</td></tr>
+
+      <tr><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td></tr>
+      <tr>
+        <td align="right">
+        <input type="submit" name="submit" value="Submit">
+        </td>
+      </tr>
+    </table>
+  </form>
+
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', '<?php echo $google_analytics; ?>']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+  <?php echo $pixel; ?>
+</body>
+</html>
